@@ -1,4 +1,6 @@
-# decode-spam-headers.py
+<img align="right" src="https://visitor-badge.laobi.icu/badge?page_id=platima.smtpheaders" height="20" />
+
+# 📧 SMTP Header Viewer
 
 Whether you are trying to understand why a specific e-mail ended up in SPAM/Junk for your daily Administrative duties or for your Red-Team Phishing simulation purposes, this script is there for you to help!
 
