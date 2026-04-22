@@ -723,7 +723,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   .actions { display: flex; justify-content: flex-end; margin-top: 20px; }
 
-  .privacy-note {
+  .submit-notice {
     font-size: 0.72rem;
     color: var(--muted);
     text-align: center;
@@ -731,7 +731,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     line-height: 1.7;
     position: relative;
   }
-  .privacy-note strong { color: var(--text); }
+  .submit-notice strong { color: var(--text); }
 
   button[type=submit] {
     background: var(--accent);
@@ -1051,7 +1051,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button type="submit" id="submit-btn">Analyse &#8594;</button>
     </div>
   </form>
-  <p class="privacy-note">
+  <p class="submit-notice">
       &#128274;&nbsp;<strong>Privacy:</strong> Email body and attachments are stripped before submission and never sent to this server.
       Submitted headers are analysed in memory and are not stored or logged.
       Results are based on Microsoft&#8217;s published anti-spam data and real-world header patterns. Analysis is provided as a diagnostic aid - verify findings before acting on them in a security or compliance context.
