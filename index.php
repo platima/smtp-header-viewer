@@ -1158,8 +1158,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </ul>
       <div class="cl-version">0.2.7 <span>2026-04-22</span></div>
       <ul>
-        <li>Changelog modal in footer</li>
-        <li>Version bump discipline corrected to semver 0.x.y</li>
+        <li>Changelog modal in footer (closes on &times;, backdrop click, or Escape)</li>
+        <li>CageFS/CloudLinux python detection fix: checks <code>/opt/alt/pythonXXX</code> paths then login shell fallback</li>
       </ul>
       <div class="cl-version">0.2.6 <span>2026-04-22</span></div>
       <ul>
@@ -1167,6 +1167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <li>Error output now reports which Python binary was resolved</li>
         <li>Dropzone icon changed from lock to envelope</li>
         <li>Instructions moved to <code>.github/copilot-instructions.md</code></li>
+        <li>Version bump discipline corrected to semver 0.x.y</li>
       </ul>
       <div class="cl-version">0.2.5 <span>2026-04-22</span></div>
       <ul>
