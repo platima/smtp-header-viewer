@@ -10,18 +10,39 @@ define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
 
-// Resolve the Python binary once per request: prefer python3, fall back to python.
+// Resolve the Python binary once per request.
+// Checks common absolute paths first (web server PATH is often restricted),
+// then falls back to `which` and finally bare name as last resort.
 function find_python_bin(): string {
     static $resolved = null;
     if ($resolved !== null) return $resolved;
-    foreach (['python3', 'python'] as $candidate) {
-        $path = trim((string)shell_exec('command -v ' . escapeshellarg($candidate) . ' 2>/dev/null'));
-        if ($path !== '') {
-            $resolved = $candidate;
+
+    // Common absolute paths, preferred order
+    $candidates = [
+        '/bin/python3',
+        '/usr/bin/python3',
+        '/usr/local/bin/python3',
+        '/bin/python',
+        '/usr/bin/python',
+        '/usr/local/bin/python',
+    ];
+    foreach ($candidates as $path) {
+        if (file_exists($path) && is_executable($path)) {
+            $resolved = $path;
             return $resolved;
         }
     }
-    $resolved = 'python3'; // last resort - error will surface in output
+
+    // Try `which` as a fallback (external binary, more reliable than `command -v` under sh)
+    foreach (['python3', 'python'] as $name) {
+        $path = trim((string)shell_exec('which ' . escapeshellarg($name) . ' 2>/dev/null'));
+        if ($path !== '' && file_exists($path)) {
+            $resolved = $path;
+            return $resolved;
+        }
+    }
+
+    $resolved = 'python3'; // last resort – error will surface in output
     return $resolved;
 }
 
