@@ -44,4 +44,3 @@
 - [ ] **Metrics/analytics** - recommended: Cloudflare Analytics (free, no code changes, privacy-friendly). Alternative: Plausible or Umami (self-hosted)
 - [ ] **Cloudflare Turnstile** - CAPTCHA/challenge on the form to reduce bot abuse (minimal code: JS widget + PHP verification)
 - [ ] **Upstream PR** - submit `replaceColors`/`htmlColors` nested colour fix, `open()` encoding fix, and XSS escape fix as separate PRs to mgeeky/decode-spam-headers
-- [ ] **Remember DNS preference** - persist the Resolve DNS checkbox state in `localStorage`
