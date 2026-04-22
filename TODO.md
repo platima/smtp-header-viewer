@@ -1,15 +1,30 @@
-1. COPILOT.md will need updating; the site should use solarized colour theme (dark), semver, and Australian English with no double hyphens (--) or em dashes. Git commits should be done after each change, push after each complete set for release.
-2. I have updated just the first two lines of README.md but the rest would need an update to account for these changes, eg the URL, purpose, etc. I'll have to take new screenshots too.
-3. The crude changes to his python script should be made more compatible, so it works for this purpose, but can be merged back upstream without breaking his project. Eg make them conditional on how the script is called or something.
-4. correlate-rules.py may no longer be required, to be confirmed, but likely best left if it's a fork of his? Else if I can merge the main .py changes without merging that delete it would work
-5. Same goes for requirements.txt
-6. Any obvious bugs should be fixed up
-7. There probably needs to be some sort of rate limiting
-8. A full security review is required to make sure that there's no ways this can be used to breach the hosting server
-9. Any obvious improvements should be noted too.
-10. I'll have Cloudflare WAF in front of this, so any considerations for that should be noted. I'll likely have caching bypassed if required.
-11. Use a nicer set of fonts, maybe Intel Mono One for anything fixed-width, and something similar for the rest.
-12. Support dark & light mode, defaulting to user system config.
-13. Credit Platima Tinkers (SBC Shop: https://shop.plati.ma, YouTube: https://youtube.com/@PlatimaTinkers, GitHub: https://github.com/Platima) somewhere, eg footer
-14. Maybe track some metrics somehow/somewhere if it's worth it
-15. Setup a full test suite
+# TODO
+
+## Done
+
+- [x] **COPILOT.md update** - Solarised colour scheme, semver, Australian English, no em dashes, commit/push conventions
+- [x] **README.md rewrite** - web interface intro (smtpheaders.com), self-hosting instructions, credits, CLI usage secondary. _Screenshots need retaking after launch._
+- [x] **Python upstream compatibility** - import stubs gated on `DECODE_SPAM_HEADERS_WEB` env var; CLI mode preserves original `sys.exit(1)` behaviour; TOC feature conditional on web mode
+- [x] **correlate-rules.py** - kept in repo, documented as supplementary CLI tool in README
+- [x] **requirements.txt** - kept as-is (Python deps still needed)
+- [x] **Bug fixes** - nested colour marker fix, `open()` encoding fix, dateutil stub bare except now logs warning
+- [x] **Rate limiting** - file-based per-IP throttle (10 req/min); Cloudflare rate limiting recommended on top
+- [x] **Security review** - CSRF tokens, iframe sandbox fix, HTTP security headers, debug mode restricted to env var, server-side file type validation, temp file cleanup, POST method check on MSG endpoint
+- [x] **Cloudflare WAF** - documented considerations (rate limiting rules on POST, cache bypass, Turnstile recommended, WAF cannot inspect upload bodies)
+- [x] **Fonts** - Intel One Mono (monospace), Source Sans 3 (sans-serif)
+- [x] **Dark/light mode** - Solarised Dark/Light, system preference detection, manual toggle with localStorage persistence
+- [x] **Platima Tinkers credits** - footer with SBC Shop, YouTube, GitHub links
+- [x] **CODE_OF_CONDUCT.md** - updated enforcement contact to Platima Tinkers
+- [x] **LICENSE** - added Platima Tinkers copyright alongside original MIT
+
+## In Progress
+
+- [ ] **Test suite** - Python unit tests (header parsing, colour replacement, HTML output, import stubs); PHP integration tests (uploads, CSRF, rate limiting, file validation, .msg extraction); security tests (XSS payloads, oversized input, malformed files)
+- [ ] **Delete original comparison file** - `decode-spam-headers - original.py` can be removed now that Python changes are done
+
+## Future
+
+- [ ] **New screenshots** - retake after the web UI is deployed at smtpheaders.com
+- [ ] **Metrics/analytics** - recommended: Cloudflare Analytics (free, no code changes, privacy-friendly). Alternative: Plausible or Umami (self-hosted)
+- [ ] **Cloudflare Turnstile** - CAPTCHA/challenge on the form to reduce bot abuse (minimal code: JS widget + PHP verification)
+- [ ] **Upstream PR** - submit `replaceColors`/`htmlColors` nested colour fix and `open()` encoding fix as separate PRs to mgeeky/decode-spam-headers
