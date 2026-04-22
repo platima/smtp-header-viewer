@@ -133,110 +133,67 @@ import base64
 from html import escape
 from email import header as emailheader
 from datetime import *
-
-# When running as a web backend (env DECODE_SPAM_HEADERS_WEB=1), missing
-# dependencies get graceful stubs instead of sys.exit(1).  This keeps the
-# script usable upstream as a CLI tool (original behaviour) while letting
-# the PHP frontend receive partial results when optional packages are absent.
-_WEB_MODE = os.environ.get('DECODE_SPAM_HEADERS_WEB') == '1'
+from dateutil.tz import *
 
 try:
-    from dateutil.tz import *
-    from dateutil import parser as _dateutil_parser_module
-    class parser:
-        parse = staticmethod(_dateutil_parser_module.parse)
+    from dateutil import parser
 except ImportError:
-    if _WEB_MODE:
-        class tzutc(tzinfo):
-            def utcoffset(self, dt): return timedelta(0)
-            def tzname(self, dt): return 'UTC'
-            def dst(self, dt): return timedelta(0)
-        class tzlocal(tzutc): pass
-        class parser:
-            @staticmethod
-            def parse(ts):
-                from email.utils import parsedate_to_datetime
-                try:
-                    return parsedate_to_datetime(ts)
-                except Exception:
-                    sys.stderr.write(f'[!] dateutil stub: could not parse "{ts}"\n')
-                    return datetime.now()
-    else:
-        print('[!] You need to install python-dateutil:\n        # pip3 install python-dateutil\n')
-        sys.exit(1)
+    print('''
+[!] You need to install python-dateutil: 
+        # pip3 install python-dateutil
+''')
+    sys.exit(1)
 
-try:
+try: 
     import colorama
 except ImportError:
-    if _WEB_MODE:
-        class _ColoramaStub:
-            def init(self, **kw): pass
-            def deinit(self): pass
-        colorama = _ColoramaStub()
-    else:
-        print('[!] You need to install colorama:\n        # pip3 install colorama\n')
-        sys.exit(1)
+    print('''
+[!] You need to install colorama: 
+        # pip3 install colorama
+''')
+    sys.exit(1)
 
 try:
     import packaging.version
+
 except ImportError:
-    if _WEB_MODE:
-        class _Version:
-            def __init__(self, v):
-                self._t = tuple(int(x) for x in str(v).split('.') if x.isdigit())
-            def __eq__(self, o): return self._t == o._t
-            def __lt__(self, o): return self._t < o._t
-            def __le__(self, o): return self._t <= o._t
-            def __gt__(self, o): return self._t > o._t
-            def __ge__(self, o): return self._t >= o._t
-        class _PackagingVersionStub:
-            @staticmethod
-            def parse(v): return _Version(v)
-        class _PackagingStub:
-            version = _PackagingVersionStub()
-        packaging = _PackagingStub()
-    else:
-        print('[!] You need to install packaging:\n        # pip3 install packaging\n')
-        sys.exit(1)
+    print('''
+[!] You need to install packaging: 
+        # pip3 install packaging
+''')
+    sys.exit(1)
 
 try:
     import requests
 except ImportError:
-    if _WEB_MODE:
-        import types as _types
-        requests = _types.SimpleNamespace(
-            get=lambda *a, **kw: (_ for _ in ()).throw(RuntimeError('requests not available'))
-        )
-    else:
-        print('[!] You need to install requests:\n        # pip3 install requests\n')
-        sys.exit(1)
+    print('''
+[!] You need to install requests: 
+        # pip3 install requests
+''')
+    sys.exit(1)
 
 try:
     import tldextract
 except ImportError:
-    if _WEB_MODE:
-        class _TLDResult:
-            domain = ''; subdomain = ''; suffix = ''
-        class _TLDExtractStub:
-            def extract(self, url): return _TLDResult()
-        tldextract = _TLDExtractStub()
-    else:
-        print('[!] You need to install tldextract:\n        # pip3 install tldextract\n')
-        sys.exit(1)
+    print('''
+[!] You need to install tldextract: 
+        # pip3 install tldextract
+''')
+    sys.exit(1)
 
 try:
     import dns.resolver
+
 except ImportError:
-    if _WEB_MODE:
-        import types as _types
-        class _DnsResolverStub:
-            NoAnswer = Exception
-            NoNameservers = Exception
-            def resolve(self, *a, **kw): raise Exception('dnspython not available')
-        dns = _types.SimpleNamespace(resolver=_DnsResolverStub())
-    else:
-        print('[!] You need to install dnspython:\n        # pip3 install dnspython\n')
-        sys.exit(1)
+    print('''
+[!] You need to install dnspython: 
+        # pip3 install dnspython
+
+    If problem remains, re-install dnspython:
+        # pip3 uninstall dnspython
+        # pip3 install dnspython
+''')
+    sys.exit(1)
 
 colorama.init()
 
@@ -294,23 +251,35 @@ class Logger:
 
     @staticmethod
     def replaceColors(s, colorizingFunc):
-        # Process innermost color markers first to handle nesting correctly.
-        # The pattern matches a __COLOR_N__| marker whose content contains no
-        # further __COLOR_ markers (i.e. it is the innermost one).
-        inner = re.compile(
-            r'__COLOR_(\d+)__\|((?:(?!__COLOR_).)*?)\|__END_COLOR__',
-            re.DOTALL
-        )
+        pos = 0
 
-        while True:
-            m = inner.search(s)
-            if not m:
-                break
-            c      = int(m.group(1))
-            txt    = m.group(2)
-            colored = colorizingFunc(c, txt)
-            assert len(colored) > 0, f"Could not strip colors from phrase: ({m.group(0)})!"
-            s = s[:m.start()] + colored + s[m.end():]
+        while pos < len(s):
+            if s[pos:].startswith('__COLOR_'):
+                pos += len('__COLOR_')
+                pos1 = s[pos:].find('__|')
+
+                assert pos1 != -1, "Output colors mismatch - could not find pos of end of color number!"
+
+                c = int(s[pos:pos+pos1])
+                pos += pos1 + len('__|')
+                pos2 = s[pos:].find('|__END_COLOR__')
+
+                assert pos2 != -1, "Output colors mismatch - could not find end of color marker!"
+
+                txt = s[pos:pos+pos2]
+                pos += pos2 + len('|__END_COLOR__')
+
+                patt = f'__COLOR_{c}__|{txt}|__END_COLOR__'
+
+                colored = colorizingFunc(c, txt)
+
+                assert len(colored) > 0, f"Could not strip colors from phrase: ({patt})!"
+
+                s = s.replace(patt, colored)
+                pos = 0
+                continue
+
+            pos += 1
 
         return s
 
@@ -326,10 +295,7 @@ class Logger:
     @staticmethod
     def htmlColors(s):
         def get_col(c, txt):
-            # txt may contain <font> tags from inner colour replacements.
-            # Escape only the plain-text segments to avoid double-encoding.
-            parts = re.split(r'(<font[^>]*>.*?</font>)', txt, flags=re.DOTALL)
-            text = ''.join(escape(p) if not p.startswith('<font') else p for p in parts)
+            text = escape(txt)
 
             for k, v in Logger.colors_map.items():
                 if v == c:
@@ -6678,37 +6644,12 @@ def formatToHtml(body, headers):
     testStart = '>>>>>>>>>>>>>>>>>>>>>>'
     testEnd   = '<<<<<<<<<<<<<<<<<<<<<<'
 
-    # ----------------------------------------------------------------
-    # Build TOC and inject anchors BEFORE space/newline encoding,
-    # while the text is still easy to parse with regex.
-    # Only enabled in web mode; CLI HTML output stays unchanged.
-    # ----------------------------------------------------------------
-    toc_entries = []
-
-    if _WEB_MODE:
-        def inject_anchor(m):
-            num      = m.group(1)
-            name_raw = m.group(2)
-            name = re.sub(r'<[^>]+>', '', name_raw).strip()
-            slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
-            anchor_id = f'test-{num}-{slug}'
-            toc_entries.append((num, name, anchor_id))
-            return f'<div id="{anchor_id}"><hr/>\n({num}) Test: {name_raw}'
-
-        body = re.sub(
-            r'>>>>>>>>>>>>>>>>>>>>>>\s*\n\((\d+)\) Test: (.*)',
-            inject_anchor,
-            body
-        )
-
-    # Replace any leftover bare markers
     body = body.replace(testStart, '<div><hr/>')
     body = body.replace(testEnd,   '</div>')
 
-    # Standard encoding
-    body    = body.replace('\n', '<br/>\n').replace('\t', '\t' + '&nbsp;' * 4).replace(' ', '&nbsp;')
+    body = body.replace('\n', '<br/>\n').replace('\t', '\t' + '&nbsp;' * 4).replace(' ', '&nbsp;')
     headers = headers.replace('\n', '<br/>\n').replace('\t', '\t' + '&nbsp;' * 4).replace(' ', '&nbsp;')
-    body2   = body
+    body2 = body
 
     for m in re.finditer(r'(<[^>]+>)', body, re.I):
         a = m.group(1)
@@ -6716,33 +6657,6 @@ def formatToHtml(body, headers):
         body2 = body2.replace(a, b)
 
     body = body2
-
-    # Build TOC HTML and CSS (only when entries were collected, i.e. web mode)
-    toc_html = ''
-    toc_css  = ''
-    if toc_entries:
-        items = ''.join(
-            f'<li><a href="#" onclick="document.getElementById(\'{e[2]}\').scrollIntoView({{behavior:\'smooth\'}});return false;"><span style="color:#888;margin-right:6px">({e[0]})</span>{escape(e[1])}</a></li>'
-            for e in toc_entries
-        )
-        toc_html = f'''
-<nav id="toc">
-  <div id="toc-heading" onclick="var l=document.getElementById('toc-list');l.style.display=l.style.display==='block'?'none':'block'">
-    &#9776;&nbsp; Table of Contents <span id="toc-count">({len(toc_entries)}&nbsp;tests)</span>
-  </div>
-  <ol id="toc-list">{items}</ol>
-</nav>'''
-        toc_css = '''
-/* Table of Contents */
-#toc { position: sticky; top: 0; z-index: 100; background: #1a1a2e; border-bottom: 1px solid #333; padding: 0; font-family: Consolas, monaco, monospace; }
-#toc-heading { padding: 8px 16px; cursor: pointer; font-size: 13px; color: #aaa; user-select: none; }
-#toc-heading:hover { color: #fff; }
-#toc-count { font-size: 11px; color: #666; }
-#toc-list { display: none; margin: 0; padding: 8px 16px 12px 36px; max-height: 40vh; overflow-y: auto; background: #12121e; border-top: 1px solid #2a2a3e; column-count: 2; column-gap: 32px; }
-#toc-list li { font-size: 12px; line-height: 1.8; break-inside: avoid; }
-#toc-list a { color: ''' + Logger.html_colors_map['cyan'] + '''; text-decoration: none; }
-#toc-list a:hover { text-decoration: underline; }
-'''
 
     outputHtml = f'''
 <!DOCTYPE html>
@@ -6875,12 +6789,9 @@ a {{
    text-decoration: none;
 }}
 
-{toc_css}
-
   </style>
   <body>
-    {toc_html}
-    <div style="padding: 16px">
+    <div>
         <br/>
         <h2>
         SMTP Headers analysis by <a href="https://github.com/mgeeky/decode-spam-headers">decode-spam-headers.py</a>
@@ -6901,9 +6812,7 @@ a {{
         </article>
         <br/>
     </div>
-    <div style="padding: 0 16px">
     {body}
-    </div>
   </body>
 </html>
 '''     
@@ -6961,7 +6870,7 @@ def main(argv):
             maxTest = test
 
     text = ''
-    with open(args.infile, encoding='utf-8', errors='replace') as f:
+    with open(args.infile) as f:
         text = f.read()
 
     try:
