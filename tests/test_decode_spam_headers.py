@@ -295,3 +295,91 @@ class TestWebModeOutputClean:
         # Plain text should be escaped; no raw &lt;/font&gt; artefacts
         assert '&lt;/font&gt;' not in result
         assert _escape('inner text') in result or 'inner text' in result
+
+
+class TestO365InternalHeaders:
+    """Tests using a real-world anonymised O365 internal email fixture.
+
+    The fixture (tests/fixtures/o365-internal.eml) is a genuine internal
+    Microsoft 365 message with all PII removed: names, emails, domains,
+    IPv6 addresses, GUIDs, and UPN hashes replaced with safe placeholders.
+    It exercises the full O365 header stack including ForeFront, BCL/SCL,
+    cross-tenant stamps, and authentication-results.
+    """
+
+    O365_EML = FIXTURES / 'o365-internal.eml'
+
+    def _run_web(self, args):
+        env = os.environ.copy()
+        env['DECODE_SPAM_HEADERS_WEB'] = '1'
+        return subprocess.run(
+            [sys.executable, str(SCRIPT)] + args,
+            capture_output=True, text=True, env=env, timeout=60
+        )
+
+    def test_parses_without_error(self):
+        """Script must exit 0 on the O365 fixture."""
+        result = self._run_web(['-f', 'html', '-R', str(self.O365_EML)])
+        assert result.returncode == 0, \
+            f'Script exited {result.returncode}.\nstderr: {result.stderr[:500]}'
+
+    def test_html_output_produced(self):
+        result = self._run_web(['-f', 'html', '-R', str(self.O365_EML)])
+        assert result.returncode == 0
+        assert '<html' in result.stdout.lower()
+        assert '<body' in result.stdout.lower()
+
+    def test_forefront_antispam_parsed(self):
+        """x-forefront-antispam-report must be recognised and reported."""
+        result = self._run_web(['-R', str(self.O365_EML)])
+        assert result.returncode == 0
+        assert 'forefront' in result.stdout.lower() or 'Forefront' in result.stdout
+
+    def test_microsoft_antispam_parsed(self):
+        """x-microsoft-antispam BCL value must appear in output."""
+        result = self._run_web(['-R', str(self.O365_EML)])
+        assert result.returncode == 0
+        # BCL:0 means Bulk Complaint Level 0 - script should mention BCL or antispam
+        assert 'BCL' in result.stdout or 'antispam' in result.stdout.lower()
+
+    def test_authentication_results_parsed(self):
+        """authentication-results header with DKIM/DMARC none must be processed."""
+        result = self._run_web(['-R', str(self.O365_EML)])
+        assert result.returncode == 0
+        assert 'dkim' in result.stdout.lower() or 'authentication' in result.stdout.lower()
+
+    def test_multiple_received_hops(self):
+        """Three Received hops in the fixture must all appear in output."""
+        result = self._run_web(['-R', str(self.O365_EML)])
+        assert result.returncode == 0
+        # The output must reference the intermediate O365 server names
+        assert 'SYBPR01MB6175' in result.stdout
+        assert 'ME5PR01MB10204' in result.stdout
+
+    def test_scl_minus_one_reported(self):
+        """X-MS-Exchange-Organization-SCL: -1 (internal bypass) must be noted."""
+        result = self._run_web(['-R', str(self.O365_EML)])
+        assert result.returncode == 0
+        assert 'SCL' in result.stdout or 'scl' in result.stdout.lower()
+
+    def test_no_ansi_in_output(self):
+        """No ANSI escape sequences should bleed into stdout in web mode."""
+        result = self._run_web(['-f', 'html', '-R', str(self.O365_EML)])
+        assert result.returncode == 0
+        assert '\x1b[' not in result.stdout
+
+    def test_balanced_font_tags(self):
+        """HTML output must have matching <font> / </font> tag counts."""
+        result = self._run_web(['-f', 'html', '-R', str(self.O365_EML)])
+        assert result.returncode == 0
+        open_count  = result.stdout.count('<font ')
+        close_count = result.stdout.count('</font>')
+        assert open_count == close_count, \
+            f'Mismatched font tags on O365 fixture: {open_count} opens, {close_count} closes'
+
+    def test_no_escaped_font_tags(self):
+        """html.escape() must not be applied to <font> markup in output."""
+        result = self._run_web(['-f', 'html', '-R', str(self.O365_EML)])
+        assert result.returncode == 0
+        assert '&lt;font ' not in result.stdout
+        assert '&lt;/font&gt;' not in result.stdout

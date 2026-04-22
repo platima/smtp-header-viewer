@@ -1,0 +1,84 @@
+Received: from ME5PR01MB10204.ausprd01.prod.outlook.com
+ (2603:10c6:220:1b5::2a) by MEYPR01MB6487.ausprd01.prod.outlook.com with
+ HTTPS; Wed, 22 Apr 2026 05:34:44 +0000
+Received: from SYBPR01MB6175.ausprd01.prod.outlook.com (2603:10c6:10:3d::8) by
+ ME5PR01MB10204.ausprd01.prod.outlook.com (2603:10c6:220:1b5::2a) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.16; Wed, 22 Apr
+ 2026 05:34:40 +0000
+Received: from SYBPR01MB6175.ausprd01.prod.outlook.com
+ ([fe80::1a2b:3c4d:e5f6:789a]) by SYBPR01MB6175.ausprd01.prod.outlook.com
+ ([fe80::1a2b:3c4d:e5f6:789a%4]) with mapi id 15.20.9846.016; Wed, 22 Apr 2026
+ 05:34:40 +0000
+From: "Jane Citizen (DEMO)" <jc@demo-company.example>
+To: DEMO IT Support <support@demo-company.example>
+Subject: FW: Your ISP Invoice
+Thread-Topic: Your ISP Invoice
+Thread-Index: AQHb2y3kmSNffH5/v136G8I7/hCzjMZnlAtv
+Date: Wed, 22 Apr 2026 05:34:40 +0000
+Message-ID:
+	<AUSMB0123456789ABCDEF01234567ABCDEF01@SYBPR01MB6175.ausprd01.prod.outlook.com>
+References: <1a2b3c4d5e6f7890abcdef1234567890@sample-isp.example>
+In-Reply-To: <1a2b3c4d5e6f7890abcdef1234567890@sample-isp.example>
+Accept-Language: en-US, en-AU
+Content-Language: en-US
+X-MS-Exchange-Organization-AuthAs: Internal
+X-MS-Exchange-Organization-AuthMechanism: 04
+X-MS-Exchange-Organization-AuthSource: SYBPR01MB6175.ausprd01.prod.outlook.com
+X-MS-Exchange-Organization-SupervisoryReview-OcrResultLocation:
+	{"Status":"OcrRequired","CorrelationId":null,"Locations":null}
+X-MS-Has-Attach: yes
+X-MS-Exchange-Organization-Network-Message-Id:
+	a1b2c3d4-e5f6-7890-abcd-ef1234567890
+X-MS-Exchange-Organization-SCL: -1
+X-MS-TNEF-Correlator:
+X-MS-Exchange-Organization-RecordReviewCfmType: 0
+x-ms-publictraffictype: Email
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=demo-company.example;
+x-forefront-antispam-report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:-1;SRV:;IPV:NLI;SFV:SKI;H:SYBPR01MB6175.ausprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(6049299003)(7049299003)(3109299003)(69100299015)(18002099003)(56012099003)(22082099003)(55112099003)(8096899003)(41050700001);DIR:INT;
+x-ms-office365-filtering-correlation-id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+x-ms-traffictypediagnostic:
+	SYBPR01MB6175:EE_|ME5PR01MB10204:EE_|MEYPR01MB6487:EE_
+x-microsoft-antispam:
+	BCL:0;ARA:13230040|366016|6049299003|7049299003|3109299003|69100299015|18002099003|56012099003|22082099003|55112099003|8096899003|41050700001;
+x-ms-exchange-crosstenant-originalarrivaltime: 22 Apr 2026 05:34:40.4954 (UTC)
+x-ms-exchange-crosstenant-network-message-id:
+	a1b2c3d4-e5f6-7890-abcd-ef1234567890
+x-ms-exchange-crosstenant-id: d4e5f6a7-b8c9-1234-5678-90abcdef1234
+x-ms-exchange-crosstenant-fromentityheader: Hosted
+x-ms-exchange-transport-crosstenantheadersstamped: ME5PR01MB10204
+x-ms-exchange-transport-endtoendlatency: 00:00:04.3121513
+x-ms-exchange-processed-by-bccfoldering: 15.20.9846.017
+x-ms-exchange-crosstenant-authsource: SYBPR01MB6175.ausprd01.prod.outlook.com
+x-ms-exchange-crosstenant-authas: Internal
+x-ms-exchange-atpmessageproperties: SL
+x-ms-exchange-crosstenant-mailboxtype: HOSTED
+x-ms-exchange-crosstenant-userprincipalname:
+	rT9sLhUwK/mppZnRj6e/0vGcnMSEXcjoFB2VDktzpYa7C/wo5gWbu/dBGPq/M45j
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944506478)(944626604)(920097)(425001)(930201)(20251009189)(140003)(1420198);
+X-Microsoft-Antispam-Message-Info:
+	=?windows-1256?Q?pMc526WM2NAGloU/CpLt6ti/2PCiQJqKk0c7bTvexapt7VICk3rVgnd0?=
+ =?windows-1256?Q?CkFpUEOrO+/QLp9uPqLSvh2x1jP7GDlOxmn9zoSyUhQVsKyj95mI/Rit?=
+ =?windows-1256?Q?yMLiE/r2rXH33TJqCRYdBX0E1SjZteEQ0MN9p4XC+j9aJndBvolrUjKp?=
+ =?windows-1256?Q?sG4Ko/hi7AEQ/PR7vI+yAGR0SGM42mPbSmtP9klsR4IXBzly6l8kQHub?=
+ =?windows-1256?Q?9u0FgWpb0V/S9smHPID8emF0QfYvuIL9NHGODBSPQXnGOeXPQnc6U2Qa?=
+ =?windows-1256?Q?IZjdvbANv0sYYy7A8RD5c7Flti5rY5kLWW0GkbdRHlpnJ1CrW7+0BzCl?=
+ =?windows-1256?Q?DcLV8bTy8lZpwll6vi439sLcsIZM2ZdZpj5EUceNapKKCAjwsb5AGngx?=
+ =?windows-1256?Q?LCGbOarVARYyN4m4FiD2tz10GMHkW+Td1NdgnD48c6+9MprG+i7hbSyG?=
+ =?windows-1256?Q?Tbrr8cC68+a7gQS9wF1gINCeMnxyM+eCF8DXFHv7Sw2XMBzfz15juATY?=
+ =?windows-1256?Q?DWbkGPOWEMZqUcLcisp2R7ocITNFAmtunPuQ+N/+GZgkXFca/rBvZRm5?=
+ =?windows-1256?Q?aczDNMdBR4qUuyvYWJKjwuGXB7z94MJd91f2njReR2ABGI7i/SgIeKDW?=
+ =?windows-1256?Q?RKim/g9Ox82ZQypnXXVMSolyaK7kXgiu1j5djA7dnjVDg9eKPTwyD0zn?=
+ =?windows-1256?Q?lFNLvnIFfqQTT4rAVGXcFmWGHVHdvkhStVvDvI9LZ2a+ghB4YeOsE4r0?=
+ =?windows-1256?Q?Df1gmNFdl5NX4/6p0Qp3gy7HmKB+TMwUEHo4Bls2axqPSBhEyHwKfnQ+?=
+ =?windows-1256?Q?8+/9h7bUTQxWuDu3vz32l2v4bb5YHGcZSmf22mN7yrn/DTGGOGo2OZSo?=
+ =?windows-1256?Q?CD6RuXO6PGo8iB2oIE1PJ4qsmXjJq55NmLpcXelwNLtoFGykDIR/gV7Z?=
+ =?windows-1256?Q?HmKLfwXSoBE1Qnh7mp0XprPThI69hNGJHgE30XTMRiGhtqOOQky/H+2Q?=
+ =?windows-1256?Q?1buoavpVHw6tHqmlXRkeTKCtTNUcWNrE1egKieeFRjJdGJ6BvSXOFpQ1?=
+ =?windows-1256?Q?Zqr/RXQWDDkTHel3?=
+Content-Type: multipart/mixed;
+	boundary="_004_AUSMB0123456789ABCDEF01234567ABCDEF01SYBPR01MB6175ausp_"
+MIME-Version: 1.0

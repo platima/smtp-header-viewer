@@ -33,10 +33,11 @@
 - [x] **Copy-to-clipboard** - button on results page copies plain-text analysis; falls back to `execCommand` for older browsers
 - [x] **Dependency health check** - `?action=healthz` endpoint (debug mode only) reports Python binary, version, and pip package status
 - [x] **README: self-hosting deps** - documented `?action=healthz` verification step
+- [x] **Better test fixture** - added `tests/fixtures/o365-internal.eml` (real-world O365 internal email, fully anonymised); 10 new tests in `TestO365InternalHeaders`; 31/31 pass
 
 ## Future
 
-- [ ] **Better test header** - replace `tests/fixtures/sample.eml` with a richer real-world capture (IPs/domains/names anonymised)
+- [ ] **Replace sample.eml** - `tests/fixtures/sample.eml` is a minimal synthetic fixture; could be replaced by the richer `o365-internal.eml` if the simple fixture is no longer needed
 - [ ] **New screenshots** - retake after the web UI is deployed at smtpheaders.com
 - [ ] **Metrics/analytics** - recommended: Cloudflare Analytics (free, no code changes, privacy-friendly). Alternative: Plausible or Umami (self-hosted)
 - [ ] **Cloudflare Turnstile** - CAPTCHA/challenge on the form to reduce bot abuse (minimal code: JS widget + PHP verification)
