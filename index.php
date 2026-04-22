@@ -11,13 +11,14 @@ define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
 
 // Resolve the Python binary once per request.
-// Tests each candidate by actually executing it - avoids open_basedir restrictions
-// that prevent file_exists() checks on paths outside the web root.
+// Tests each candidate by actually executing it - avoids open_basedir restrictions.
+// Stores per-candidate results in $GLOBALS['_python_diag'] for error reporting.
 function find_python_bin(): string {
     static $resolved = null;
     if ($resolved !== null) return $resolved;
 
-    // Try absolute paths first, then bare names; test by running --version
+    $GLOBALS['_python_diag'] = [];
+
     $candidates = [
         '/bin/python3',
         '/usr/bin/python3',
@@ -30,7 +31,13 @@ function find_python_bin(): string {
     ];
     foreach ($candidates as $candidate) {
         $out = @shell_exec(escapeshellarg($candidate) . ' --version 2>&1');
-        if ($out !== null && strpos($out, 'Python') !== false) {
+        $hit = ($out !== null && strpos($out, 'Python') !== false);
+        $GLOBALS['_python_diag'][] = [
+            'candidate' => $candidate,
+            'output'    => $out,
+            'matched'   => $hit,
+        ];
+        if ($hit) {
             $resolved = $candidate;
             return $resolved;
         }
@@ -38,6 +45,36 @@ function find_python_bin(): string {
 
     $resolved = 'python3'; // last resort – error will surface in output
     return $resolved;
+}
+
+// Build an HTML diagnostics block for inclusion in error output.
+function python_diagnostics_html(string $cmd): string {
+    $dis   = ini_get('disable_functions') ?: '(none)';
+    $test  = @shell_exec('echo __shell_test__ 2>&1');
+    $id    = @shell_exec('id 2>&1');
+    $path  = @shell_exec('echo $PATH 2>&1');
+    $diag  = $GLOBALS['_python_diag'] ?? [];
+
+    $rows = '';
+    foreach ($diag as $d) {
+        $out = $d['output'] === null ? '<em>null (exec blocked or binary missing)</em>'
+             : htmlspecialchars(trim((string)$d['output']));
+        $mark = $d['matched'] ? '&#10003;' : '&#x2715;';
+        $rows .= '<tr><td>' . htmlspecialchars($d['candidate']) . '</td>'
+               . '<td>' . $mark . '</td>'
+               . '<td>' . $out . '</td></tr>';
+    }
+
+    return '<details style="margin-top:10px;font-size:0.75rem;"><summary style="cursor:pointer;font-weight:bold;">PHP/shell diagnostics (expand)</summary>'
+        . '<table style="border-collapse:collapse;margin-top:6px;width:100%;" border="1" cellpadding="4">'
+        . '<tr><th>PHP disable_functions</th><td colspan="2">' . htmlspecialchars($dis) . '</td></tr>'
+        . '<tr><th>shell_exec test</th><td colspan="2">' . (strpos((string)$test, '__shell_test__') !== false ? 'OK' : 'FAILED - returned: ' . htmlspecialchars((string)$test)) . '</td></tr>'
+        . '<tr><th>PHP process user</th><td colspan="2">' . htmlspecialchars((string)$id) . '</td></tr>'
+        . '<tr><th>PATH seen by PHP</th><td colspan="2">' . htmlspecialchars((string)$path) . '</td></tr>'
+        . '<tr><th>Command run</th><td colspan="2"><code>' . htmlspecialchars($cmd) . '</code></td></tr>'
+        . '<tr><th>Python candidate</th><th>Match?</th><th>Output of --version</th></tr>'
+        . $rows
+        . '</table></details>';
 }
 
 // -----------------------------------------------------------------------
@@ -266,7 +303,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             @unlink($tmp);
 
             if ($output === null || $output === false) {
-                $script_errors[] = 'Failed to execute the analysis script. Check that python3 is in PATH and the script is readable by the web server user.';
+                $script_errors[] = 'Failed to execute the analysis script (shell_exec returned null/false).'
+                    . python_diagnostics_html($cmd);
             } else {
                 $lines      = explode("\n", $output);
                 $html_lines = [];
@@ -293,11 +331,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } elseif (empty($script_errors)) {
                     $preview = htmlspecialchars(mb_substr(trim($raw_output), 0, 2048));
                     $script_errors[] = 'Script returned no recognisable output. '
-                        . 'Verify that <code>' . htmlspecialchars(find_python_bin()) . '</code> is in PATH for the web server user '
-                        . 'and that all dependencies are installed.';
+                        . 'Python binary resolved to: <code>' . htmlspecialchars(find_python_bin()) . '</code>';
                     $script_errors[] = '<strong>Script output:</strong><pre style="white-space:pre-wrap;word-break:break-all;margin-top:6px;font-size:0.75rem;">'
                         . $preview . (strlen(trim($raw_output)) > 2048 ? '\n[... truncated]' : '') . '</pre>'
-                        . '<p style="margin-top:6px;font-size:0.75rem;">Python binary in use: <code>' . htmlspecialchars(find_python_bin()) . '</code></p>';
+                        . python_diagnostics_html($cmd);
                     if (DEBUG_MODE) {
                         $script_errors[] = '<strong>Full debug output:</strong><pre style="white-space:pre-wrap;word-break:break-all;margin-top:8px;">'
                             . htmlspecialchars($raw_output) . '</pre>';
