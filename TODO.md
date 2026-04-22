@@ -35,6 +35,7 @@
 - [x] **README: self-hosting deps** - documented `?action=healthz` verification step
 - [x] **Better test fixture** - added `tests/fixtures/o365-internal.eml` (real-world O365 internal email, fully anonymised); 10 new tests in `TestO365InternalHeaders`; 31/31 pass
 - [x] **Results page polish** - TOC always expanded; duplicate TOC numbers removed (ol→ul); title/attribution removed from results (credit stays in footer); extra blank lines around Original SMTP Headers removed; console hint suppressed in web mode; 35/35 tests
+- [x] **Privacy notice** - added below Analyse button: body/attachments stripped and not sent; headers not stored; results are a diagnostic guide; TOC toggle first-click bug fixed; 35/35 tests
 
 ## Future
 

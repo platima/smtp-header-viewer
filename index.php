@@ -5,7 +5,7 @@
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
 define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
 define('MAX_PASTE_CHARS', 50000);       // max characters for pasted headers
-define('APP_VERSION',     '0.3.2');
+define('APP_VERSION',     '0.3.3');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
@@ -723,6 +723,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   .actions { display: flex; justify-content: flex-end; margin-top: 20px; }
 
+  .privacy-note {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 14px;
+    line-height: 1.7;
+  }
+  .privacy-note strong { color: var(--text); }
+
   button[type=submit] {
     background: var(--accent);
     color: var(--bg);
@@ -1040,6 +1049,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="actions">
       <button type="submit" id="submit-btn">Analyse &#8594;</button>
     </div>
+    <p class="privacy-note">
+      &#128274;&nbsp;<strong>Privacy:</strong> Email body and attachments are stripped before submission and never sent to this server.
+      Submitted headers are analysed in memory and are not stored or logged.
+      Results are provided as a diagnostic guide only and may be incomplete or inaccurate.
+    </p>
   </form>
   <?php endif; ?>
 
@@ -1134,6 +1148,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button class="modal-close" id="changelog-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
+      <div class="cl-version">0.3.3 <span>2026-04-22</span></div>
+      <ul>
+        <li>Privacy notice added below the Analyse button (no storage, body stripped, results are a diagnostic guide)</li>
+        <li>Fix TOC toggle: first click now correctly collapses an already-expanded TOC</li>
+      </ul>
       <div class="cl-version">0.3.2 <span>2026-04-22</span></div>
       <ul>
         <li>TOC always expanded by default (no click required)</li>

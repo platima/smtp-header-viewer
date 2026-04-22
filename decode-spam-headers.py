@@ -6763,7 +6763,7 @@ def formatToHtml(body, headers):
         )
         toc_html = f'''
 <nav id="toc">
-  <div id="toc-heading" onclick="var l=document.getElementById('toc-list');l.style.display=l.style.display==='block'?'none':'block'">
+  <div id="toc-heading" onclick="var l=document.getElementById('toc-list');l.style.display=l.style.display==='none'?'block':'none'">
     &#9776;&nbsp; Table of Contents <span id="toc-count">({len(toc_entries)}&nbsp;tests)</span>
   </div>
   <ul id="toc-list">{items}</ul>

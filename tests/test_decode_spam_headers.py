@@ -311,11 +311,16 @@ class TestWebModeOutputClean:
         assert 'mariuszbit' not in result.stdout
 
     def test_toc_expanded_by_default(self):
-        """TOC list must be visible by default (display:block, not display:none)."""
+        """TOC list must be visible by default: CSS rule must be display:block."""
         result = self._run_web(['-f', 'html', '-R', str(SAMPLE_EML)])
         assert result.returncode == 0
-        assert 'display: block' in result.stdout or 'display:block' in result.stdout
-        assert 'display: none' not in result.stdout and 'display:none' not in result.stdout
+        # The CSS rule for #toc-list must set display:block (expanded by default).
+        # Note: display:none also appears in the onclick toggle handler; we check
+        # the CSS rule specifically rather than banning the string globally.
+        import re as _re
+        css_display = _re.search(r'#toc-list\s*\{[^}]*display:\s*(\S+?);', result.stdout)
+        assert css_display and css_display.group(1) == 'block', \
+            'Expected #toc-list CSS to be display:block'
 
     def test_toc_no_duplicate_numbers(self):
         """TOC must use <ul> not <ol> to avoid auto-numbering alongside test numbers."""

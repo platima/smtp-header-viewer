@@ -19,7 +19,7 @@ Fork of [mgeeky/decode-spam-headers](https://github.com/mgeeky/decode-spam-heade
 ## Version Number
 **Always bump `APP_VERSION` in `index.php` when making any user-facing change.**
 
-Current version: `0.3.2`
+Current version: `0.3.3`
 
 ### Version history
 - 0.1.x - upstream mgeeky/decode-spam-headers (see upstream git log)
@@ -36,6 +36,7 @@ Current version: `0.3.2`
 - 0.3.0 - Copy-to-clipboard on results; diagnostics gated behind DSH_DEBUG=1; ?action=healthz dependency check endpoint; README self-hosting docs
 - 0.3.1 - Paste strips email body (JS on paste event + PHP server-side safety net); "Body stripped" notice shown
 - 0.3.2 - TOC always expanded; remove duplicate TOC numbers (ol→ul); remove title/attribution from results; remove extra BRs around Original SMTP Headers; suppress console hint in web mode; 35/35 tests
+- 0.3.3 - Privacy notice on front page (no storage, body stripped, diagnostic disclaimer); fix TOC toggle first-click bug
 
 ## Key Architecture
 
