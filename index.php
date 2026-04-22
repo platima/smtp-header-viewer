@@ -5,7 +5,7 @@
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
 define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
 define('MAX_PASTE_CHARS', 50000);       // max characters for pasted headers
-define('APP_VERSION',     '0.3.0');
+define('APP_VERSION',     '0.3.1');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
@@ -346,6 +346,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $raw_headers = trim($raw_headers ?? '');
+
+        // Strip email body: if there is a blank line (header/body separator),
+        // keep only the portion before it. Applies to both pasted text and
+        // uploaded files, as a server-side safety net for the JS stripping.
+        $separator = strpos($raw_headers, "\n\n");
+        if ($separator !== false) {
+            $raw_headers = trim(substr($raw_headers, 0, $separator));
+        }
 
         if (empty($script_errors) && empty($raw_headers)) {
             $script_errors[] = 'No headers provided. Paste headers into the text box or upload an .eml / .msg file.';
@@ -1016,7 +1024,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <textarea name="headers" id="headers-input" maxlength="50000"
           placeholder="Received: from mail-wr1-f99.google.com ...&#10;X-Forefront-Antispam-Report: CIP:209.85.222.99; ...&#10;&#10;Paste raw email headers here, or drop a file above."
         ><?= htmlspecialchars($_POST['headers'] ?? '') ?></textarea>
-        <div class="char-counter" id="char-counter"><span id="char-count">0</span>&nbsp;/&nbsp;50,000</div>
+        <div class="char-counter" id="char-counter"><span id="char-count">0</span>&nbsp;/&nbsp;50,000 <span id="paste-notice" style="display:none;margin-left:8px;color:var(--accent);font-size:0.72rem;">Body stripped</span></div>
         <div class="textarea-drop-hint">&#8595; Drop .eml or .msg to extract headers</div>
       </div>
 
@@ -1126,6 +1134,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button class="modal-close" id="changelog-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
+      <div class="cl-version">0.3.1 <span>2026-04-22</span></div>
+      <ul>
+        <li>Paste auto-strips email body: text pasted into the header box is truncated at the first blank line; brief &ldquo;Body stripped&rdquo; notice shown</li>
+        <li>Server-side body strip: PHP also truncates at the blank-line separator as a safety net</li>
+      </ul>
       <div class="cl-version">0.3.0 <span>2026-04-22</span></div>
       <ul>
         <li>Copy-to-clipboard button on results page</li>
@@ -1416,6 +1429,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (ta) {
     ta.addEventListener('input', updateCharCounter);
     updateCharCounter(); // initialise on page load (handles repopulated POST value)
+
+    // Strip email body on paste: if the pasted text contains a blank line
+    // (header/body separator) truncate to the header block only.
+    ta.addEventListener('paste', function (e) {
+      const pasted = (e.clipboardData || window.clipboardData).getData('text');
+      if (!pasted) return; // let browser handle empty paste normally
+
+      const stripped = extractHeaders(pasted);
+      if (stripped.length < pasted.trim().length) {
+        e.preventDefault();
+        // Replace the full textarea value so we don't append into existing content
+        const start = ta.selectionStart;
+        const before = ta.value.substring(0, start);
+        const after  = ta.value.substring(ta.selectionEnd);
+        ta.value = (before + stripped + after).substring(0, MAX_PASTE);
+        // Move caret to end of insertion
+        const newPos = Math.min(start + stripped.length, ta.value.length);
+        ta.setSelectionRange(newPos, newPos);
+        updateCharCounter();
+        // Brief notice
+        const notice = document.getElementById('paste-notice');
+        if (notice) {
+          notice.style.display = 'inline';
+          clearTimeout(notice._t);
+          notice._t = setTimeout(() => { notice.style.display = 'none'; }, 4000);
+        }
+      }
+    });
   }
 
   // ------------------------------------------------------------------

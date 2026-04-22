@@ -19,7 +19,7 @@ Fork of [mgeeky/decode-spam-headers](https://github.com/mgeeky/decode-spam-heade
 ## Version Number
 **Always bump `APP_VERSION` in `index.php` when making any user-facing change.**
 
-Current version: `0.3.0`
+Current version: `0.3.1`
 
 ### Version history
 - 0.1.x - upstream mgeeky/decode-spam-headers (see upstream git log)
@@ -34,6 +34,7 @@ Current version: `0.3.0`
 - 0.2.8 - Fix ANSI codes in HTML output (suppress logger stderr in web mode); fix stray </font> text from nested colour markers (depth-tracking split); 21/21 tests
 - 0.2.9 - SVG favicon (Solarised envelope, img/favicon.svg)
 - 0.3.0 - Copy-to-clipboard on results; diagnostics gated behind DSH_DEBUG=1; ?action=healthz dependency check endpoint; README self-hosting docs
+- 0.3.1 - Paste strips email body (JS on paste event + PHP server-side safety net); "Body stripped" notice shown
 
 ## Key Architecture
 
