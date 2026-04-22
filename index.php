@@ -13,13 +13,24 @@ define('RATE_WINDOW',     60);          // seconds
 // Resolve the Python binary once per request.
 // Tests each candidate by actually executing it - avoids open_basedir restrictions.
 // Stores per-candidate results in $GLOBALS['_python_diag'] for error reporting.
+// Sets $GLOBALS['_python_via_login_shell'] to the shell path if CageFS login-shell
+// wrapping is needed (CloudLinux/cPanel lsphp cage doesn't mount python directly).
 function find_python_bin(): string {
     static $resolved = null;
     if ($resolved !== null) return $resolved;
 
     $GLOBALS['_python_diag'] = [];
+    $GLOBALS['_python_via_login_shell'] = '';
 
+    // Direct candidates: CloudLinux alt-python paths first, then standard paths.
     $candidates = [
+        '/opt/alt/python312/bin/python3',
+        '/opt/alt/python311/bin/python3',
+        '/opt/alt/python310/bin/python3',
+        '/opt/alt/python39/bin/python3',
+        '/opt/alt/python38/bin/python3',
+        '/opt/alt/python3/bin/python3',
+        '/usr/local/cpanel/3rdparty/bin/python3',
         '/bin/python3',
         '/usr/bin/python3',
         '/usr/local/bin/python3',
@@ -39,6 +50,32 @@ function find_python_bin(): string {
         ];
         if ($hit) {
             $resolved = $candidate;
+            return $resolved;
+        }
+    }
+
+    // CageFS fallback: on CloudLinux/cPanel the lsphp cage may not mount python,
+    // but a login shell does. Try bash -l and sh -l.
+    foreach (['/bin/bash', '/bin/sh'] as $sh) {
+        // First discover the real path via login shell so we can report it.
+        $found = trim((string)@shell_exec($sh . ' -l -c \'which python3 2>/dev/null || which python 2>/dev/null\' 2>&1'));
+        $label = $sh . ' -l -c python3';
+        if ($found !== '' && strpos($found, 'python') !== false && strpos($found, ' ') === false) {
+            $label = $sh . ' -l → ' . $found;
+        }
+
+        // Verify it actually runs through login shell.
+        $out = @shell_exec($sh . ' -l -c \'python3 --version 2>/dev/null || python --version 2>/dev/null\' 2>&1');
+        $hit = ($out !== null && strpos($out, 'Python') !== false);
+        $GLOBALS['_python_diag'][] = [
+            'candidate' => $label . ' (login shell wrapper)',
+            'output'    => $out,
+            'matched'   => $hit,
+        ];
+        if ($hit) {
+            $GLOBALS['_python_via_login_shell'] = $sh;
+            // Return the discovered path if we have it, otherwise bare name.
+            $resolved = ($found !== '' && strpos($found, 'python') !== false) ? $found : 'python3';
             return $resolved;
         }
     }
@@ -291,13 +328,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             file_put_contents($tmp, $raw_headers);
 
             $resolve_flag = !empty($_POST['resolve']) ? '-r' : '-R';
-            $cmd = 'DECODE_SPAM_HEADERS_WEB=1'
-                 . ' ' . find_python_bin()
-                 . ' ' . escapeshellarg(SCRIPT_PATH)
-                 . ' -f html'
-                 . ' ' . $resolve_flag
-                 . ' ' . escapeshellarg($tmp)
-                 . ' 2>&1';
+            $python = find_python_bin();
+            $login_sh = $GLOBALS['_python_via_login_shell'] ?? '';
+
+            if ($login_sh !== '') {
+                // CageFS: python is only accessible via a login shell.
+                // Build the inner command and wrap it in bash -l -c '...'
+                $inner = 'DECODE_SPAM_HEADERS_WEB=1'
+                       . ' ' . escapeshellarg($python)
+                       . ' ' . escapeshellarg(SCRIPT_PATH)
+                       . ' -f html'
+                       . ' ' . $resolve_flag
+                       . ' ' . escapeshellarg($tmp);
+                $cmd = $login_sh . ' -l -c ' . escapeshellarg($inner) . ' 2>&1';
+            } else {
+                $cmd = 'DECODE_SPAM_HEADERS_WEB=1'
+                     . ' ' . $python
+                     . ' ' . escapeshellarg(SCRIPT_PATH)
+                     . ' -f html'
+                     . ' ' . $resolve_flag
+                     . ' ' . escapeshellarg($tmp)
+                     . ' 2>&1';
+            }
 
             $output = shell_exec($cmd);
             @unlink($tmp);
