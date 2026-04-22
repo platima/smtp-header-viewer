@@ -6766,7 +6766,7 @@ def formatToHtml(body, headers):
   <div id="toc-heading" onclick="var l=document.getElementById('toc-list');l.style.display=l.style.display==='block'?'none':'block'">
     &#9776;&nbsp; Table of Contents <span id="toc-count">({len(toc_entries)}&nbsp;tests)</span>
   </div>
-  <ol id="toc-list">{items}</ol>
+  <ul id="toc-list">{items}</ul>
 </nav>'''
         toc_css = '''
 /* Table of Contents */
@@ -6774,11 +6774,26 @@ def formatToHtml(body, headers):
 #toc-heading { padding: 8px 16px; cursor: pointer; font-size: 13px; color: #aaa; user-select: none; }
 #toc-heading:hover { color: #fff; }
 #toc-count { font-size: 11px; color: #666; }
-#toc-list { display: none; margin: 0; padding: 8px 16px 12px 36px; max-height: 40vh; overflow-y: auto; background: #12121e; border-top: 1px solid #2a2a3e; column-count: 2; column-gap: 32px; }
+#toc-list { display: block; margin: 0; padding: 8px 16px 12px 36px; max-height: 40vh; overflow-y: auto; background: #12121e; border-top: 1px solid #2a2a3e; column-count: 2; column-gap: 32px; }
 #toc-list li { font-size: 12px; line-height: 1.8; break-inside: avoid; }
 #toc-list a { color: ''' + Logger.html_colors_map['cyan'] + '''; text-decoration: none; }
 #toc-list a:hover { text-decoration: underline; }
 '''
+
+    if _WEB_MODE:
+        _title_block = ''
+        _details_br  = ''
+    else:
+        _title_block = '''
+        <br/>
+        <h2>
+        SMTP Headers analysis by <a href="https://github.com/mgeeky/decode-spam-headers">decode-spam-headers.py</a>
+        </h2>
+        <i style=".text-grey">(brought to you by <a style="size:8px" href="https://twitter.com/mariuszbit">@mariuszbit</a>)</i>
+        <br/>
+        <br/>
+        <br/>'''
+        _details_br  = '        <br/>\n'
 
     outputHtml = f'''
 <!DOCTYPE html>
@@ -6916,15 +6931,7 @@ a {{
   </style>
   <body>
     {toc_html}
-    <div style="padding: 16px">
-        <br/>
-        <h2>
-        SMTP Headers analysis by <a href="https://github.com/mgeeky/decode-spam-headers">decode-spam-headers.py</a>
-        </h2>
-        <i style=".text-grey">(brought to you by <a style="size:8px" href="https://twitter.com/mariuszbit">@mariuszbit</a>)</i>
-        <br/>
-        <br/>
-        <br/>
+    <div style="padding: 16px">{_title_block}
         <article>
           <details>
             <summary>Original SMTP Headers</summary>
@@ -6935,8 +6942,7 @@ a {{
             </blockquote>
           </details>
         </article>
-        <br/>
-    </div>
+{_details_br}    </div>
     <div style="padding: 0 16px">
     {body}
     </div>
@@ -7040,7 +7046,7 @@ def main(argv):
     else:
         print(output)
 
-        if not options['nocolor']:
+        if not options['nocolor'] and not _WEB_MODE:
             print('''
 ------------------------------------------
 

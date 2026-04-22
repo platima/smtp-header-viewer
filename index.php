@@ -5,7 +5,7 @@
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
 define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
 define('MAX_PASTE_CHARS', 50000);       // max characters for pasted headers
-define('APP_VERSION',     '0.3.1');
+define('APP_VERSION',     '0.3.2');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
@@ -1134,6 +1134,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button class="modal-close" id="changelog-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
+      <div class="cl-version">0.3.2 <span>2026-04-22</span></div>
+      <ul>
+        <li>TOC always expanded by default (no click required)</li>
+        <li>TOC no longer shows duplicate numbers (removed redundant ordered-list counter)</li>
+        <li>Removed &ldquo;SMTP Headers analysis by decode-spam-headers.py&rdquo; title and <code>@mariuszbit</code> attribution from results page (credit remains in app footer)</li>
+        <li>Removed extra blank lines before and after the Original SMTP Headers section</li>
+        <li>Suppressed &ldquo;Experiencing a bad-looking output&rdquo; console hint in web mode</li>
+      </ul>
       <div class="cl-version">0.3.1 <span>2026-04-22</span></div>
       <ul>
         <li>Paste auto-strips email body: text pasted into the header box is truncated at the first blank line; brief &ldquo;Body stripped&rdquo; notice shown</li>

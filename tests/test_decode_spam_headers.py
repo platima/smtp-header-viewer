@@ -296,6 +296,34 @@ class TestWebModeOutputClean:
         assert '&lt;/font&gt;' not in result
         assert _escape('inner text') in result or 'inner text' in result
 
+    def test_no_console_hint_in_web_stdout(self):
+        """'Experiencing a bad-looking output' footer must not appear in web mode."""
+        result = self._run_web(['-f', 'html', '-R', str(SAMPLE_EML)])
+        assert result.returncode == 0
+        assert 'Experiencing a bad-looking output' not in result.stdout
+        assert 'Experiencing a bad-looking output' not in result.stderr
+
+    def test_no_title_attribution_in_web_output(self):
+        """Title h2 and @mariuszbit attribution must not appear in web HTML output."""
+        result = self._run_web(['-f', 'html', '-R', str(SAMPLE_EML)])
+        assert result.returncode == 0
+        assert 'SMTP Headers analysis by' not in result.stdout
+        assert 'mariuszbit' not in result.stdout
+
+    def test_toc_expanded_by_default(self):
+        """TOC list must be visible by default (display:block, not display:none)."""
+        result = self._run_web(['-f', 'html', '-R', str(SAMPLE_EML)])
+        assert result.returncode == 0
+        assert 'display: block' in result.stdout or 'display:block' in result.stdout
+        assert 'display: none' not in result.stdout and 'display:none' not in result.stdout
+
+    def test_toc_no_duplicate_numbers(self):
+        """TOC must use <ul> not <ol> to avoid auto-numbering alongside test numbers."""
+        result = self._run_web(['-f', 'html', '-R', str(SAMPLE_EML)])
+        assert result.returncode == 0
+        assert '<ul id="toc-list">' in result.stdout
+        assert '<ol id="toc-list">' not in result.stdout
+
 
 class TestO365InternalHeaders:
     """Tests using a real-world anonymised O365 internal email fixture.
