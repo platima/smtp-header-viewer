@@ -278,7 +278,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } elseif (empty($script_errors)) {
                     $preview = htmlspecialchars(mb_substr(trim($raw_output), 0, 2048));
                     $script_errors[] = 'Script returned no recognisable output. '
-                        . 'Verify that <code>' . htmlspecialchars(PYTHON_BIN) . '</code> is in PATH for the web server user '
+                        . 'Verify that <code>' . htmlspecialchars(find_python_bin()) . '</code> is in PATH for the web server user '
                         . 'and that all dependencies are installed.';
                     $script_errors[] = '<strong>Script output:</strong><pre style="white-space:pre-wrap;word-break:break-all;margin-top:6px;font-size:0.75rem;">'
                         . $preview . (strlen(trim($raw_output)) > 2048 ? '\n[... truncated]' : '') . '</pre>'
