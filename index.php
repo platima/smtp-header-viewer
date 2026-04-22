@@ -729,6 +729,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     text-align: center;
     margin-top: 14px;
     line-height: 1.7;
+    position: relative;
   }
   .privacy-note strong { color: var(--text); }
 
@@ -1049,12 +1050,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="actions">
       <button type="submit" id="submit-btn">Analyse &#8594;</button>
     </div>
-    <p class="privacy-note">
+  </form>
+  <p class="privacy-note">
       &#128274;&nbsp;<strong>Privacy:</strong> Email body and attachments are stripped before submission and never sent to this server.
       Submitted headers are analysed in memory and are not stored or logged.
       Results are based on Microsoft&#8217;s published anti-spam data and real-world header patterns. Analysis is provided as a diagnostic aid - verify findings before acting on them in a security or compliance context.
     </p>
-  </form>
   <?php endif; ?>
 
   <?php if ($processing && $result_html): ?>
@@ -1134,6 +1135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </p>
     <p style="margin-top: 6px;">
       Built by <a href="https://github.com/Platima" target="_blank" rel="noopener">Platima Tinkers</a>
+      &nbsp;|&nbsp; <a href="https://github.com/platima/smtp-header-viewer" target="_blank" rel="noopener">Source</a>
       &nbsp;|&nbsp; <a href="https://shop.plati.ma" target="_blank" rel="noopener">SBC Shop</a>
       &nbsp;|&nbsp; <a href="https://youtube.com/@PlatimaTinkers" target="_blank" rel="noopener">YouTube</a>
     </p>
