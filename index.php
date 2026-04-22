@@ -5,7 +5,7 @@
 define('PYTHON_BIN',      'python3');
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
 define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
-define('MAX_PASTE_CHARS', 30000);       // max characters for pasted headers
+define('MAX_PASTE_CHARS', 50000);       // max characters for pasted headers
 define('APP_VERSION',     '1.18');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
@@ -730,10 +730,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="divider">or paste / drop headers below</div>
 
       <div class="textarea-wrap" id="textarea-wrap">
-        <textarea name="headers" id="headers-input" maxlength="30000"
+        <textarea name="headers" id="headers-input" maxlength="50000"
           placeholder="Received: from mail-wr1-f99.google.com ...&#10;X-Forefront-Antispam-Report: CIP:209.85.222.99; ...&#10;&#10;Paste raw email headers here, or drop a file above."
         ><?= htmlspecialchars($_POST['headers'] ?? '') ?></textarea>
-        <div class="char-counter" id="char-counter"><span id="char-count">0</span>&nbsp;/&nbsp;30,000</div>
+        <div class="char-counter" id="char-counter"><span id="char-count">0</span>&nbsp;/&nbsp;50,000</div>
         <div class="textarea-drop-hint">&#8595; Drop .eml or .msg to extract headers</div>
       </div>
 
@@ -874,7 +874,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Dropzone DROP:
   //   .eml / .txt → read in browser, strip to header block, auto-submit as text
   //   .msg → extract headers server-side, populate textarea, auto-submit
-  const MAX_DROP_BYTES = 20 * 1024 * 1024; // 20 MB hard reject (avoid OOM)
+  const MAX_DROP_BYTES = 50 * 1024 * 1024; // 50 MB hard reject (avoid OOM)
   dropzone.addEventListener('drop', async e => {
     e.preventDefault();
     dropzone.classList.remove('dragover');
@@ -882,7 +882,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!file) return;
 
     if (file.size > MAX_DROP_BYTES) {
-      fileName.textContent = '\u26a0 ' + file.name + ' \u2014 file too large (max 20 MB)';
+      fileName.textContent = '\u26a0 ' + file.name + ' \u2014 file too large (max 50 MB)';
       return;
     }
 
@@ -998,7 +998,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // ------------------------------------------------------------------
   const charCount   = document.getElementById('char-count');
   const charCounter = document.getElementById('char-counter');
-  const MAX_PASTE   = 30000;
+  const MAX_PASTE   = 50000;
 
   function updateCharCounter() {
     if (!charCount || !ta) return;
