@@ -20,8 +20,11 @@
 - [x] **Test suite** - Python unit tests covering header parsing, HTML output, colour replacement, import stubs, TOC, XSS, oversized input; all 16 pass
 - [x] **Delete original comparison file** - `decode-spam-headers - original.py` removed
 - [x] **Related resources** - MXToolbox and Microsoft Message Header Analyser links on homepage
-- [x] **Paste size limit** - 30,000-character cap on textarea (client-side counter + maxlength + server-side check); uploads strip to header block in browser before submit
-- [x] **Drop file handling** - .eml body stripped in browser before submission; 20 MB hard reject; .msg server-side extraction unchanged
+- [x] **Paste size limit** - 50,000-character cap on textarea (client-side counter + maxlength + server-side check); uploads strip to header block in browser before submit
+- [x] **Drop file handling** - .eml body stripped in browser before submission; 50 MB hard reject; .msg server-side extraction unchanged
+- [x] **Python binary detection** - auto-detects python3/python via `command -v`; reports resolved binary in error output
+- [x] **Versioning corrected** - semver 0.x.y (pre-stable); current version 0.2.6
+- [x] **Copilot instructions** - moved to `.github/copilot-instructions.md` so they are loaded automatically
 
 ## Future
 

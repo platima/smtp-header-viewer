@@ -12,19 +12,24 @@ Fork of [mgeeky/decode-spam-headers](https://github.com/mgeeky/decode-spam-heade
 - **Australian English** throughout (analyse, colour, honour, etc.)
 - **No double hyphens** (`--`) or em dashes in prose. Use a single dash or rephrase.
 - **Solarised colour scheme** (dark default, light mode supported)
-- **Semver**: bump patch for fixes, minor for new features, major for breaking changes
+- **Semver**: `0.x.y` while pre-stable. Bump patch (`y`) for fixes, minor (`x`) for new features, major only for breaking changes. **Always bump `APP_VERSION` in `index.php` on every user-facing change** - do not leave it at the previous value.
 - **Git**: commit after each logical change, push after each complete release set
 - **Fonts**: Intel One Mono (monospace), Source Sans 3 (sans-serif)
 
 ## Version Number
 **Always bump `APP_VERSION` in `index.php` when making any user-facing change.**
 
-Current version: `1.18`
+Current version: `0.2.6`
 
 ### Version history
-- 1.0 to 1.16 — Initial build through nested colour marker fix (see git log)
-- 1.17 — Security hardening (CSRF, rate limiting, iframe sandbox, security headers, debug restriction, file validation, temp cleanup); Solarised dark/light theme; Intel One Mono fonts; conditional Python import stubs (env var gated); Platima Tinkers credits
-- 1.18 — XSS fix (HTML-escape uncoloured header values and raw headers block in Python output); paste size limit (30k chars, client + server); .eml body stripped in browser before submit; related resources section (MXToolbox, Microsoft MHA); 16/16 tests passing
+- 0.1.x - upstream mgeeky/decode-spam-headers (see upstream git log)
+- 0.2.0 - initial Platima fork; crude index.php created; README/FUNDING added
+- 0.2.1 - Python upstream compatibility (import stubs, TOC gated on env var, bug fixes)
+- 0.2.2 - Security hardening (CSRF, rate limiting, iframe sandbox, HTTP headers, debug restriction, file validation, temp cleanup); Solarised dark/light theme; Intel One Mono fonts; Platima Tinkers credits
+- 0.2.3 - XSS fix (HTML-escape header values and raw block in Python output); paste 50k-char limit; .eml body stripped in browser; related resources (MXToolbox, Microsoft MHA); 16/16 tests; .gitignore
+- 0.2.4 - Drop limit 50 MB, paste limit 50k chars
+- 0.2.5 - Fix char counter on drop; remove header tagline; replace all em dashes; always show Python output snippet on failure
+- 0.2.6 - Auto-detect python3/python binary; envelope emoji; move instructions to .github/copilot-instructions.md; semver corrected to 0.x.y
 
 ## Key Architecture
 

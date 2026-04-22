@@ -5,7 +5,7 @@
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
 define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
 define('MAX_PASTE_CHARS', 50000);       // max characters for pasted headers
-define('APP_VERSION',     '1.18');
+define('APP_VERSION',     '0.2.6');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
