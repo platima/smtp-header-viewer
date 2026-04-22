@@ -213,3 +213,85 @@ class TestSecurityInputHandling:
             assert result.returncode == 0
         finally:
             os.unlink(tmppath)
+
+
+class TestWebModeOutputClean:
+    """Regression tests for artefacts that must not appear in web-mode output."""
+
+    def _run_web(self, args):
+        env = os.environ.copy()
+        env['DECODE_SPAM_HEADERS_WEB'] = '1'
+        return subprocess.run(
+            [sys.executable, str(SCRIPT)] + args,
+            capture_output=True, text=True, env=env, timeout=60
+        )
+
+    def test_no_ansi_codes_in_stderr(self):
+        """Logger must not emit ANSI escape sequences to stderr in web mode."""
+        result = self._run_web(['-f', 'html', '-R', str(SAMPLE_EML)])
+        assert result.returncode == 0
+        assert '\x1b[' not in result.stderr, \
+            f'ANSI escape sequences found in stderr:\n{result.stderr[:500]}'
+
+    def test_no_ansi_codes_in_stdout(self):
+        """ANSI escape sequences must not bleed into the HTML stdout."""
+        result = self._run_web(['-f', 'html', '-R', str(SAMPLE_EML)])
+        assert result.returncode == 0
+        assert '\x1b[' not in result.stdout, \
+            'ANSI escape sequences found in stdout (would appear as raw codes in browser)'
+
+    def test_no_stray_font_close_tags(self):
+        """Nested colour markers must not produce stray </font> text nodes."""
+        result = self._run_web(['-f', 'html', '-R', str(SAMPLE_EML)])
+        assert result.returncode == 0
+        # If the depth-tracking fix is correct, open and close counts must match exactly.
+        open_count  = result.stdout.count('<font ')
+        close_count = result.stdout.count('</font>')
+        assert open_count == close_count, \
+            f'Mismatched <font> tags: {open_count} opens vs {close_count} closes'
+
+    def test_no_escaped_font_close_in_rendered_text(self):
+        """html.escape() must not be applied to </font> tags, which would
+        render them as literal text in the browser."""
+        result = self._run_web(['-f', 'html', '-R', str(SAMPLE_EML)])
+        assert result.returncode == 0
+        assert '&lt;/font&gt;' not in result.stdout, \
+            'Escaped </font> found – nested colour processing bug is present'
+        assert '&lt;font ' not in result.stdout, \
+            'Escaped <font found – nested colour processing bug is present'
+
+    def test_htmlcolors_nested_markers_unit(self):
+        """Unit test: htmlColors() with explicitly nested colour markers."""
+        import importlib.util, types
+        # Load the module without executing main()
+        spec = importlib.util.spec_from_file_location('dsh', str(SCRIPT))
+        mod  = importlib.util.load_from_spec = None  # not used directly
+
+        # Import via exec to get Logger without running main
+        ns = {'__name__': '__test__', '__file__': str(SCRIPT)}
+        import os as _os
+        _os.environ['DECODE_SPAM_HEADERS_WEB'] = '1'
+
+        # Build manually: a string that simulates two nested colour markers
+        # (the kind produced by replaceColors after inner processing).
+        from html import escape as _escape
+        # Simulate: outer=green wrapping inner=yellow text
+        inner = '__COLOR_33__|inner text|__END_COLOR__'
+        outer = f'__COLOR_32__|prefix {inner} suffix|__END_COLOR__'
+
+        # We need the Logger class – load it
+        src = SCRIPT.read_text(encoding='utf-8')
+        globs = {'__name__': '__test__', '__file__': str(SCRIPT)}
+        exec(compile(src, str(SCRIPT), 'exec'), globs)
+        Logger = globs['Logger']
+
+        result = Logger.htmlColors(outer)
+
+        # Should contain properly nested font tags, no stray </font>
+        open_count  = result.count('<font ')
+        close_count = result.count('</font>')
+        assert open_count == close_count, \
+            f'Nested marker test: {open_count} opens vs {close_count} closes in:\n{result}'
+        # Plain text should be escaped; no raw &lt;/font&gt; artefacts
+        assert '&lt;/font&gt;' not in result
+        assert _escape('inner text') in result or 'inner text' in result

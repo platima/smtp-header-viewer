@@ -244,7 +244,10 @@ options = {
     'debug': False,
     'verbose': False,
     'nocolor' : False,
-    'log' : sys.stderr,
+    # In web mode suppress all logger output to stderr so that ANSI-coloured
+    # warning/error messages (e.g. failed network lookups) don't bleed into
+    # the captured stdout via 2>&1 redirection.
+    'log' : 'none' if _WEB_MODE else sys.stderr,
     'format' : 'text',
     'dont_resolve' : False,
 }
@@ -332,27 +335,44 @@ class Logger:
         _TS, _TE = '\x01', '\x02'
         s = s.replace(testStart, _TS).replace(testEnd, _TE)
 
+        def escape_outside_font(txt):
+            # Split on individual opening/closing font tags and track nesting
+            # depth.  Text at depth 0 (outside all <font> blocks) is HTML-escaped;
+            # text inside a <font> block is already escaped from inner processing
+            # and must not be escaped again.  This correctly handles nested
+            # <font> tags that the old non-greedy .*?</font> regex would split
+            # incorrectly, leaving stray </font> close tags.
+            result = []
+            depth = 0
+            for part in re.split(r'(<font\b[^>]*>|</font>)', txt):
+                if re.match(r'<font\b', part):
+                    depth += 1
+                    result.append(part)
+                elif part == '</font>':
+                    depth -= 1
+                    result.append(part)
+                else:
+                    result.append(escape(part) if depth == 0 else part)
+            return ''.join(result)
+
         def get_col(c, txt):
             # txt may contain <font> tags from inner colour replacements.
             # Escape only the plain-text segments to avoid double-encoding.
-            parts = re.split(r'(<font[^>]*>.*?</font>)', txt, flags=re.DOTALL)
-            text = ''.join(escape(p) if not p.startswith('<font') else p for p in parts)
+            text = escape_outside_font(txt)
 
             for k, v in Logger.colors_map.items():
                 if v == c:
-                    htmlCol = Logger.html_colors_map[k]
                     return f'<font class="text-{k}">{text}</font>'
 
             return text
 
         result = Logger.replaceColors(s, get_col)
 
-        # Escape plain-text segments between <font> tags.  At this stage the
+        # Escape plain-text segments outside <font> tags.  At this stage the
         # only valid HTML nodes are <font> tags produced by colour processing;
         # everything else is user-supplied header content that must not be
         # interpreted as HTML.
-        parts = re.split(r'(<font\b[^>]*>.*?</font>)', result, flags=re.DOTALL)
-        result = ''.join(escape(p) if not p.startswith('<font') else p for p in parts)
+        result = escape_outside_font(result)
 
         return result.replace(_TS, testStart).replace(_TE, testEnd)
 

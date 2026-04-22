@@ -5,7 +5,7 @@
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
 define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
 define('MAX_PASTE_CHARS', 50000);       // max characters for pasted headers
-define('APP_VERSION',     '0.2.7');
+define('APP_VERSION',     '0.2.8');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
@@ -1036,6 +1036,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button class="modal-close" id="changelog-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
+      <div class="cl-version">0.2.8 <span>2026-04-22</span></div>
+      <ul>
+        <li>Fix ANSI escape codes appearing in HTML output (suppress logger stderr in web mode)</li>
+        <li>Fix stray <code>&lt;/font&gt;</code> text from nested colour markers - depth-tracking split replaces non-greedy regex</li>
+        <li>21/21 tests passing</li>
+      </ul>
       <div class="cl-version">0.2.7 <span>2026-04-22</span></div>
       <ul>
         <li>Changelog modal in footer</li>
