@@ -5,7 +5,7 @@
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
 define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
 define('MAX_PASTE_CHARS', 50000);       // max characters for pasted headers
-define('APP_VERSION',     '0.2.8');
+define('APP_VERSION',     '0.2.9');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
@@ -403,6 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SMTP Header Analyser</title>
+<link rel="icon" type="image/svg+xml" href="img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Intel+One+Mono:wght@400;600;700&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1036,6 +1037,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button class="modal-close" id="changelog-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
+      <div class="cl-version">0.2.9 <span>2026-04-22</span></div>
+      <ul>
+        <li>SVG favicon added (Solarised envelope)</li>
+      </ul>
       <div class="cl-version">0.2.8 <span>2026-04-22</span></div>
       <ul>
         <li>Fix ANSI escape codes appearing in HTML output (suppress logger stderr in web mode)</li>

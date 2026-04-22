@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#073642"/>
+  <!-- Envelope body -->
+  <rect x="4" y="9" width="24" height="16" rx="2" fill="none" stroke="#2aa198" stroke-width="2"/>
+  <!-- Envelope flap (V shape) -->
+  <polyline points="4,11 16,20 28,11" fill="none" stroke="#2aa198" stroke-width="2" stroke-linejoin="round"/>
+</svg>

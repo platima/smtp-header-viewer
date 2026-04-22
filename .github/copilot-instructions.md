@@ -19,7 +19,7 @@ Fork of [mgeeky/decode-spam-headers](https://github.com/mgeeky/decode-spam-heade
 ## Version Number
 **Always bump `APP_VERSION` in `index.php` when making any user-facing change.**
 
-Current version: `0.2.8`
+Current version: `0.2.9`
 
 ### Version history
 - 0.1.x - upstream mgeeky/decode-spam-headers (see upstream git log)
@@ -32,6 +32,7 @@ Current version: `0.2.8`
 - 0.2.6 - Auto-detect python3/python binary; envelope emoji; move instructions to .github/copilot-instructions.md; semver corrected to 0.x.y
 - 0.2.7 - Changelog modal in footer (version history, closes on X/backdrop/Escape, links to GitHub); CageFS/CloudLinux python detection fix
 - 0.2.8 - Fix ANSI codes in HTML output (suppress logger stderr in web mode); fix stray </font> text from nested colour markers (depth-tracking split); 21/21 tests
+- 0.2.9 - SVG favicon (Solarised envelope, img/favicon.svg)
 
 ## Key Architecture
 
