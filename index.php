@@ -5,7 +5,7 @@
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
 define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
 define('MAX_PASTE_CHARS', 50000);       // max characters for pasted headers
-define('APP_VERSION',     '0.2.9');
+define('APP_VERSION',     '0.3.0');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
@@ -189,6 +189,38 @@ function is_allowed_upload(string $name): bool {
 }
 
 // -----------------------------------------------------------------------
+// AJAX: health / dependency check (?action=healthz, GET, DEBUG_MODE only)
+// Returns JSON with python binary path and missing pip packages.
+// -----------------------------------------------------------------------
+if (isset($_GET['action']) && $_GET['action'] === 'healthz') {
+    if (!DEBUG_MODE) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Enable DSH_DEBUG=1 to use this endpoint.']);
+        exit;
+    }
+    header('Content-Type: application/json');
+
+    $python = find_python_bin();
+    $ver    = trim((string)@shell_exec(escapeshellarg($python) . ' --version 2>&1'));
+
+    $pkgs   = ['python-dateutil', 'tldextract', 'packaging', 'dnspython', 'colorama', 'requests'];
+    $status = [];
+    foreach ($pkgs as $pkg) {
+        $import = str_replace('-', '_', $pkg === 'python-dateutil' ? 'dateutil' : $pkg);
+        $out = @shell_exec(escapeshellarg($python) . ' -c ' . escapeshellarg("import $import; print('ok')") . ' 2>&1');
+        $status[$pkg] = (trim((string)$out) === 'ok') ? 'ok' : trim((string)$out);
+    }
+
+    echo json_encode([
+        'python_binary'  => $python,
+        'python_version' => $ver,
+        'packages'       => $status,
+        'script_exists'  => file_exists(SCRIPT_PATH),
+    ], JSON_PRETTY_PRINT);
+    exit;
+}
+
+// -----------------------------------------------------------------------
 // AJAX: extract internet headers from a .msg binary upload.
 // The RFC 822 header block is stored as plain text inside the OLE2
 // container. We scan for the largest contiguous block of header-like
@@ -355,8 +387,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             @unlink($tmp);
 
             if ($output === null || $output === false) {
-                $script_errors[] = 'Failed to execute the analysis script (shell_exec returned null/false).'
-                    . python_diagnostics_html($cmd);
+                $script_errors[] = 'Failed to execute the analysis script.'
+                    . (DEBUG_MODE ? python_diagnostics_html($cmd) : ' Enable <code>DSH_DEBUG=1</code> on the server for details.');
             } else {
                 $lines      = explode("\n", $output);
                 $html_lines = [];
@@ -386,7 +418,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         . 'Python binary resolved to: <code>' . htmlspecialchars(find_python_bin()) . '</code>';
                     $script_errors[] = '<strong>Script output:</strong><pre style="white-space:pre-wrap;word-break:break-all;margin-top:6px;font-size:0.75rem;">'
                         . $preview . (strlen(trim($raw_output)) > 2048 ? '\n[... truncated]' : '') . '</pre>'
-                        . python_diagnostics_html($cmd);
+                        . (DEBUG_MODE ? python_diagnostics_html($cmd) : '<p style="font-size:0.75rem;margin-top:6px;">Enable <code>DSH_DEBUG=1</code> on the server for full diagnostics.</p>');
                     if (DEBUG_MODE) {
                         $script_errors[] = '<strong>Full debug output:</strong><pre style="white-space:pre-wrap;word-break:break-all;margin-top:8px;">'
                             . htmlspecialchars($raw_output) . '</pre>';
@@ -749,6 +781,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   .back-link a { color: var(--accent2); text-decoration: none; }
   .back-link a:hover { text-decoration: underline; }
 
+  .result-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent2); }
+  .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+
   footer {
     margin-top: 40px;
     font-size: 0.68rem;
@@ -988,7 +1041,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         sandbox="allow-popups allow-scripts"
         title="Analysis Result"></iframe>
     </div>
-    <div class="back-link"><a href="<?= htmlspecialchars(strtok($_SERVER['REQUEST_URI'], '?')) ?>">&#8592; Analyse another</a></div>
+    <div class="result-actions">
+      <button class="copy-btn" id="copy-btn">Copy analysis</button>
+      <a class="copy-btn" style="text-decoration:none;" href="<?= htmlspecialchars(strtok($_SERVER['REQUEST_URI'], '?')) ?>">&#8592; Analyse another</a>
+    </div>
     <script>
       (function () {
         const frame = document.getElementById('result-frame');
@@ -1004,6 +1060,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           if (e.data && typeof e.data.dshHeight === 'number') {
             frame.style.height = Math.max(600, e.data.dshHeight + 20) + 'px';
           }
+        });
+
+        // Copy-to-clipboard: extract plain text from the iframe HTML
+        document.getElementById('copy-btn').addEventListener('click', function () {
+          var btn = this;
+          // Strip tags and decode entities from the result HTML
+          var tmp = document.createElement('div');
+          tmp.innerHTML = raw;
+          var text = (tmp.innerText || tmp.textContent || '').trim();
+          navigator.clipboard.writeText(text).then(function () {
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(function () {
+              btn.textContent = 'Copy analysis';
+              btn.classList.remove('copied');
+            }, 2000);
+          }).catch(function () {
+            // Fallback for older browsers / non-HTTPS
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(function () {
+              btn.textContent = 'Copy analysis';
+              btn.classList.remove('copied');
+            }, 2000);
+          });
         });
       })();
     </script>
@@ -1037,6 +1126,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button class="modal-close" id="changelog-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
+      <div class="cl-version">0.3.0 <span>2026-04-22</span></div>
+      <ul>
+        <li>Copy-to-clipboard button on results page</li>
+        <li>Diagnostics block gated behind <code>DSH_DEBUG=1</code> (security)</li>
+        <li><code>?action=healthz</code> endpoint for dependency verification (debug mode)</li>
+        <li>README: self-hosting dependency check documented</li>
+      </ul>
       <div class="cl-version">0.2.9 <span>2026-04-22</span></div>
       <ul>
         <li>SVG favicon added (Solarised envelope)</li>

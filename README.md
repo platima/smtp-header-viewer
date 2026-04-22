@@ -51,6 +51,32 @@ pip3 install -r requirements.txt
 
 Point your web server's document root at the cloned directory. The entry point is `index.php`.
 
+### Verifying dependencies
+
+With `DSH_DEBUG=1` set in the server environment, visit `/?action=healthz` to get a JSON report of the resolved Python binary, its version, and whether each required package is importable:
+
+```json
+{
+  "python_binary": "/bin/python3",
+  "python_version": "Python 3.12.12",
+  "packages": {
+    "python-dateutil": "ok",
+    "tldextract": "ok",
+    "packaging": "ok",
+    "dnspython": "ok",
+    "colorama": "ok",
+    "requests": "ok"
+  },
+  "script_exists": true
+}
+```
+
+If any package shows an error rather than `"ok"`, install it:
+
+```bash
+pip3 install <package-name> --break-system-packages
+```
+
 ### Environment variables
 
 | Variable | Default | Purpose |

@@ -22,9 +22,17 @@
 - [x] **Related resources** - MXToolbox and Microsoft Message Header Analyser links on homepage
 - [x] **Paste size limit** - 50,000-character cap on textarea (client-side counter + maxlength + server-side check); uploads strip to header block in browser before submit
 - [x] **Drop file handling** - .eml body stripped in browser before submission; 50 MB hard reject; .msg server-side extraction unchanged
-- [x] **Python binary detection** - auto-detects python3/python via `command -v`; reports resolved binary in error output
-- [x] **Versioning corrected** - semver 0.x.y (pre-stable); current version 0.2.6
+- [x] **Python binary detection** - auto-detects python3/python via `command -v`; CageFS/CloudLinux: checks alt-python paths + login shell fallback
+- [x] **Versioning corrected** - semver 0.x.y (pre-stable); current version 0.2.9
 - [x] **Copilot instructions** - moved to `.github/copilot-instructions.md` so they are loaded automatically
+- [x] **Changelog modal** - footer version number opens modal with per-version history; closes on X, backdrop click, or Escape; links to GitHub
+- [x] **ANSI bleed fix** - suppress logger stderr in web mode (no escape codes in output)
+- [x] **Nested font tag fix** - depth-tracking replace in `htmlColors()` removes stray `</font>` text
+- [x] **SVG favicon** - Solarised envelope icon (`img/favicon.svg`)
+- [x] **Diagnostics gating** - PHP/shell diagnostics block only shown when `DSH_DEBUG=1`
+- [x] **Copy-to-clipboard** - button on results page copies plain-text analysis; falls back to `execCommand` for older browsers
+- [x] **Dependency health check** - `?action=healthz` endpoint (debug mode only) reports Python binary, version, and pip package status
+- [x] **README: self-hosting deps** - documented `?action=healthz` verification step
 
 ## Future
 
@@ -33,3 +41,4 @@
 - [ ] **Metrics/analytics** - recommended: Cloudflare Analytics (free, no code changes, privacy-friendly). Alternative: Plausible or Umami (self-hosted)
 - [ ] **Cloudflare Turnstile** - CAPTCHA/challenge on the form to reduce bot abuse (minimal code: JS widget + PHP verification)
 - [ ] **Upstream PR** - submit `replaceColors`/`htmlColors` nested colour fix, `open()` encoding fix, and XSS escape fix as separate PRs to mgeeky/decode-spam-headers
+- [ ] **Remember DNS preference** - persist the Resolve DNS checkbox state in `localStorage`
