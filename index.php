@@ -2,7 +2,6 @@
 // -----------------------------------------------------------------------
 // Configuration
 // -----------------------------------------------------------------------
-define('PYTHON_BIN',      'python3');
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
 define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
 define('MAX_PASTE_CHARS', 50000);       // max characters for pasted headers
@@ -10,6 +9,21 @@ define('APP_VERSION',     '1.18');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
+
+// Resolve the Python binary once per request: prefer python3, fall back to python.
+function find_python_bin(): string {
+    static $resolved = null;
+    if ($resolved !== null) return $resolved;
+    foreach (['python3', 'python'] as $candidate) {
+        $path = trim((string)shell_exec('command -v ' . escapeshellarg($candidate) . ' 2>/dev/null'));
+        if ($path !== '') {
+            $resolved = $candidate;
+            return $resolved;
+        }
+    }
+    $resolved = 'python3'; // last resort - error will surface in output
+    return $resolved;
+}
 
 // -----------------------------------------------------------------------
 // Security headers (sent before any output)
@@ -225,9 +239,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             file_put_contents($tmp, $raw_headers);
 
             $resolve_flag = !empty($_POST['resolve']) ? '-r' : '-R';
-            $env = 'env DECODE_SPAM_HEADERS_WEB=1';
-            $cmd = $env . ' '
-                 . PYTHON_BIN
+            $cmd = 'env DECODE_SPAM_HEADERS_WEB=1'
+                 . ' ' . find_python_bin()
                  . ' ' . escapeshellarg(SCRIPT_PATH)
                  . ' -f html'
                  . ' ' . $resolve_flag
@@ -268,7 +281,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         . 'Verify that <code>' . htmlspecialchars(PYTHON_BIN) . '</code> is in PATH for the web server user '
                         . 'and that all dependencies are installed.';
                     $script_errors[] = '<strong>Script output:</strong><pre style="white-space:pre-wrap;word-break:break-all;margin-top:6px;font-size:0.75rem;">'
-                        . $preview . (strlen(trim($raw_output)) > 2048 ? '\n[... truncated]' : '') . '</pre>';
+                        . $preview . (strlen(trim($raw_output)) > 2048 ? '\n[... truncated]' : '') . '</pre>'
+                        . '<p style="margin-top:6px;font-size:0.75rem;">Python binary in use: <code>' . htmlspecialchars(find_python_bin()) . '</code></p>';
                     if (DEBUG_MODE) {
                         $script_errors[] = '<strong>Full debug output:</strong><pre style="white-space:pre-wrap;word-break:break-all;margin-top:8px;">'
                             . htmlspecialchars($raw_output) . '</pre>';
@@ -724,7 +738,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div id="dropzone">
         <input type="file" name="emlfile" id="file-input" accept=".eml,.msg,.txt,message/rfc822">
-        <span class="dz-icon">&#128274;</span>
+        <span class="dz-icon">&#128231;</span>
         <p><strong>Drop an .eml or .msg file here to analyse immediately</strong><br>or click to browse</p>
         <p class="dz-sub">.eml body is stripped automatically &nbsp;|&nbsp; .msg headers are extracted first, then submitted</p>
       </div>
