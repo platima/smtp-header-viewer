@@ -5,7 +5,7 @@
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
 define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
 define('MAX_PASTE_CHARS', 50000);       // max characters for pasted headers
-define('APP_VERSION',     '0.2.6');
+define('APP_VERSION',     '0.2.7');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
@@ -655,6 +655,114 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   footer a { color: var(--accent2); text-decoration: none; }
   footer a:hover { text-decoration: underline; }
 
+  /* Changelog modal */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 680px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .modal-title {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--heading);
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.15s;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .modal-body {
+    overflow-y: auto;
+    padding: 18px 22px 22px;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .cl-version {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--accent);
+    margin-top: 18px;
+    margin-bottom: 4px;
+  }
+  .cl-version:first-child { margin-top: 0; }
+
+  .cl-version span {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 0.72rem;
+    margin-left: 8px;
+  }
+
+  .modal-body ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .modal-body li { margin-bottom: 2px; }
+
+  .modal-footer-link {
+    padding: 12px 22px;
+    border-top: 1px solid var(--border);
+    font-size: 0.72rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .modal-footer-link a { color: var(--accent2); text-decoration: none; }
+  .modal-footer-link a:hover { text-decoration: underline; }
+
+  .changelog-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: inherit;
+    color: var(--accent2);
+    padding: 0;
+    text-decoration: underline dotted;
+  }
+  .changelog-btn:hover { color: var(--accent); }
+
   .resources-bar {
     margin-top: 36px;
     padding: 10px 0;
@@ -805,7 +913,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <footer>
     <p>
-      v<?= APP_VERSION ?> -
+      <button class="changelog-btn" id="changelog-btn">v<?= APP_VERSION ?></button> -
       Analysis engine: <a href="https://github.com/mgeeky/decode-spam-headers" target="_blank" rel="noopener">decode-spam-headers.py</a> by <a href="https://twitter.com/mariuszbit" target="_blank" rel="noopener">@mariuszbit</a>
     </p>
     <p style="margin-top: 6px;">
@@ -814,6 +922,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       &nbsp;|&nbsp; <a href="https://youtube.com/@PlatimaTinkers" target="_blank" rel="noopener">YouTube</a>
     </p>
   </footer>
+</div>
+
+<!-- Changelog modal -->
+<div class="modal-backdrop" id="changelog-modal" role="dialog" aria-modal="true" aria-label="Changelog">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Changelog</div>
+      <button class="modal-close" id="changelog-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="cl-version">0.2.7 <span>2026-04-22</span></div>
+      <ul>
+        <li>Changelog modal in footer</li>
+        <li>Version bump discipline corrected to semver 0.x.y</li>
+      </ul>
+      <div class="cl-version">0.2.6 <span>2026-04-22</span></div>
+      <ul>
+        <li>Auto-detect <code>python3</code>/<code>python</code> binary at runtime</li>
+        <li>Error output now reports which Python binary was resolved</li>
+        <li>Dropzone icon changed from lock to envelope</li>
+        <li>Instructions moved to <code>.github/copilot-instructions.md</code></li>
+      </ul>
+      <div class="cl-version">0.2.5 <span>2026-04-22</span></div>
+      <ul>
+        <li>Character counter now updates when dropping a file on the textarea</li>
+        <li>Header tagline removed (credit retained in footer)</li>
+        <li>All em dashes replaced with regular dashes throughout</li>
+        <li>Script failure now always shows raw Python output snippet for diagnosis</li>
+      </ul>
+      <div class="cl-version">0.2.4 <span>2026-04-22</span></div>
+      <ul>
+        <li>File drop limit raised to 50 MB</li>
+        <li>Paste limit raised to 50,000 characters</li>
+      </ul>
+      <div class="cl-version">0.2.3 <span>2026-04-22</span></div>
+      <ul>
+        <li>XSS fix: HTML-escape plain-text header values and raw headers block in Python output</li>
+        <li>Paste size limit: 50k-char cap with live counter, client maxlength, and server-side check</li>
+        <li>.eml body stripped in browser before submission; 50 MB hard reject on drop</li>
+        <li>Related resources bar: MXToolbox and Microsoft Message Header Analyser</li>
+        <li>16/16 pytest suite added</li>
+        <li><code>.gitignore</code> added</li>
+      </ul>
+      <div class="cl-version">0.2.2 <span>2026-04-22</span></div>
+      <ul>
+        <li>Security: CSRF tokens, rate limiting (10 req/min), iframe sandbox fix, HTTP security headers</li>
+        <li>Debug mode restricted to <code>DSH_DEBUG=1</code> env var</li>
+        <li>Server-side file type validation; temp file cleanup on shutdown</li>
+        <li>Solarised Dark/Light theme with system preference detection and manual toggle</li>
+        <li>Intel One Mono + Source Sans 3 fonts</li>
+        <li>Platima Tinkers credits in footer</li>
+      </ul>
+      <div class="cl-version">0.2.1 <span>2026-04-22</span></div>
+      <ul>
+        <li>Python import stubs gated on <code>DECODE_SPAM_HEADERS_WEB=1</code> env var</li>
+        <li>Table of Contents injected in web mode only</li>
+        <li>Nested colour marker bug fix; UTF-8 encoding fix</li>
+      </ul>
+      <div class="cl-version">0.2.0 <span>2026-04-22</span></div>
+      <ul>
+        <li>Initial Platima fork of mgeeky/decode-spam-headers</li>
+        <li>PHP web interface created; README and FUNDING added</li>
+      </ul>
+    </div>
+    <div class="modal-footer-link">
+      Full history: <a href="https://github.com/Platima/smtp-header-viewer/commits/main" target="_blank" rel="noopener">github.com/Platima/smtp-header-viewer</a>
+    </div>
+  </div>
 </div>
 
 <!-- (no client-side .msg parser - the library has Node.js dependencies that don't work in browsers) -->
@@ -1066,6 +1242,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     applyTheme(current === 'dark' ? 'light' : 'dark');
   });
+})();
+</script>
+<script>
+(function () {
+  const modal  = document.getElementById('changelog-modal');
+  const btn    = document.getElementById('changelog-btn');
+  const close  = document.getElementById('changelog-close');
+  if (!modal || !btn) return;
+
+  function openModal()  { modal.classList.add('open');    document.body.style.overflow = 'hidden'; }
+  function closeModal() { modal.classList.remove('open'); document.body.style.overflow = ''; }
+
+  btn.addEventListener('click', openModal);
+  close.addEventListener('click', closeModal);
+  // Click outside the inner modal panel to close
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+  // Escape key
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
 })();
 </script>
 </body>
