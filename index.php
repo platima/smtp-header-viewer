@@ -1052,7 +1052,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <p class="privacy-note">
       &#128274;&nbsp;<strong>Privacy:</strong> Email body and attachments are stripped before submission and never sent to this server.
       Submitted headers are analysed in memory and are not stored or logged.
-      Results are provided as a diagnostic guide only and may be incomplete or inaccurate.
+      Results are based on Microsoft&#8217;s published anti-spam data and real-world header patterns. Analysis is provided as a diagnostic aid - verify findings before acting on them in a security or compliance context.
     </p>
   </form>
   <?php endif; ?>
