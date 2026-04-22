@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Test / build artefacts
+.pytest_cache/
+htmlcov/
+.coverage
+*.log
+
+# Local dev
+LOG.txt
+.env
+*.local
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,22 @@
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+        by mx.example.com with ESMTPS id abc123
+        for <user@example.com>; Mon, 10 Jan 2022 12:34:20 +0000 (UTC)
+Received: from smtp-service.example.net (smtp-service.example.net [44.55.66.77])
+        by mail-wr1-f51.google.com with ESMTP id xyz789
+        for <user@example.com>; Mon, 10 Jan 2022 12:34:19 +0000 (UTC)
+From: "Test Sender" <sender@example.net>
+To: "Test Recipient" <user@example.com>
+Subject: Test Email for Header Analysis
+Date: Mon, 10 Jan 2022 12:34:18 +0000
+Message-ID: <test-001@example.net>
+X-Mailer: TestMailer/1.0
+X-Spam-Status: No, score=-1.0 required=5.0 tests=BAYES_00,SPF_PASS autolearn=ham
+X-Spam-Score: -1.0
+X-Spam-Flag: NO
+Received-SPF: pass (example.com: domain of sender@example.net designates 44.55.66.77 as permitted sender) client-ip=44.55.66.77;
+X-Forefront-Antispam-Report: CIP:44.55.66.77;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtp-service.example.net;PTR:smtp-service.example.net;CAT:NONE;SFS:(166002)(956004);DIR:INB;
+X-Microsoft-Antispam: BCL:0;
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+This is a test email body.

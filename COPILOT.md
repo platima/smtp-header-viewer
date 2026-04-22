@@ -19,11 +19,12 @@ Fork of [mgeeky/decode-spam-headers](https://github.com/mgeeky/decode-spam-heade
 ## Version Number
 **Always bump `APP_VERSION` in `index.php` when making any user-facing change.**
 
-Current version: `1.17`
+Current version: `1.18`
 
 ### Version history
 - 1.0 to 1.16 — Initial build through nested colour marker fix (see git log)
 - 1.17 — Security hardening (CSRF, rate limiting, iframe sandbox, security headers, debug restriction, file validation, temp cleanup); Solarised dark/light theme; Intel One Mono fonts; conditional Python import stubs (env var gated); Platima Tinkers credits
+- 1.18 — XSS fix (HTML-escape uncoloured header values and raw headers block in Python output); paste size limit (30k chars, client + server); .eml body stripped in browser before submit; related resources section (MXToolbox, Microsoft MHA); 16/16 tests passing
 
 ## Key Architecture
 

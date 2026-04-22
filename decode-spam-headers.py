@@ -325,6 +325,13 @@ class Logger:
 
     @staticmethod
     def htmlColors(s):
+        testStart = '>>>>>>>>>>>>>>>>>>>>>>'
+        testEnd   = '<<<<<<<<<<<<<<<<<<<<'
+        # Temporarily hide the block-delimiter markers so html.escape()
+        # does not corrupt them (they consist of bare > and < characters).
+        _TS, _TE = '\x01', '\x02'
+        s = s.replace(testStart, _TS).replace(testEnd, _TE)
+
         def get_col(c, txt):
             # txt may contain <font> tags from inner colour replacements.
             # Escape only the plain-text segments to avoid double-encoding.
@@ -335,10 +342,19 @@ class Logger:
                 if v == c:
                     htmlCol = Logger.html_colors_map[k]
                     return f'<font class="text-{k}">{text}</font>'
-            
+
             return text
 
-        return Logger.replaceColors(s, get_col)
+        result = Logger.replaceColors(s, get_col)
+
+        # Escape plain-text segments between <font> tags.  At this stage the
+        # only valid HTML nodes are <font> tags produced by colour processing;
+        # everything else is user-supplied header content that must not be
+        # interpreted as HTML.
+        parts = re.split(r'(<font\b[^>]*>.*?</font>)', result, flags=re.DOTALL)
+        result = ''.join(escape(p) if not p.startswith('<font') else p for p in parts)
+
+        return result.replace(_TS, testStart).replace(_TE, testEnd)
 
     def colored(self, txt, col):
         if self.options['nocolor']:
@@ -6705,9 +6721,9 @@ def formatToHtml(body, headers):
     body = body.replace(testStart, '<div><hr/>')
     body = body.replace(testEnd,   '</div>')
 
-    # Standard encoding
+    # Standard encoding (escape raw header content to prevent XSS)
     body    = body.replace('\n', '<br/>\n').replace('\t', '\t' + '&nbsp;' * 4).replace(' ', '&nbsp;')
-    headers = headers.replace('\n', '<br/>\n').replace('\t', '\t' + '&nbsp;' * 4).replace(' ', '&nbsp;')
+    headers = escape(headers).replace('\n', '<br/>\n').replace('\t', '\t' + '&nbsp;' * 4).replace(' ', '&nbsp;')
     body2   = body
 
     for m in re.finditer(r'(<[^>]+>)', body, re.I):

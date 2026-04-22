@@ -4,8 +4,9 @@
 // -----------------------------------------------------------------------
 define('PYTHON_BIN',      'python3');
 define('SCRIPT_PATH',     __DIR__ . '/decode-spam-headers.py');
-define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap
-define('APP_VERSION',     '1.17');
+define('MAX_INPUT_BYTES', 512 * 1024); // 512 KB sanity cap for file uploads
+define('MAX_PASTE_CHARS', 30000);       // max characters for pasted headers
+define('APP_VERSION',     '1.18');
 define('DEBUG_MODE',      getenv('DSH_DEBUG') === '1');
 define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
@@ -213,6 +214,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (empty($script_errors) && empty($raw_headers)) {
             $script_errors[] = 'No headers provided. Paste headers into the text box or upload an .eml / .msg file.';
+        } elseif (empty($script_errors) && isset($_POST['headers']) && strlen($raw_headers) > MAX_PASTE_CHARS) {
+            $script_errors[] = 'Pasted headers exceed the ' . number_format(MAX_PASTE_CHARS) . '-character limit. '
+                . 'If you have a full .eml file, upload or drop it — the body is stripped automatically.';
         } elseif (empty($script_errors) && strlen($raw_headers) > MAX_INPUT_BYTES) {
             $script_errors[] = 'Input exceeds the 512 KB limit.';
         } elseif (empty($script_errors)) {
@@ -633,6 +637,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   footer a { color: var(--accent2); text-decoration: none; }
   footer a:hover { text-decoration: underline; }
 
+  .resources-bar {
+    margin-top: 36px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .resources-bar a { color: var(--accent2); text-decoration: none; }
+  .resources-bar a:hover { text-decoration: underline; }
+  .resources-sep { color: var(--border); }
+
   @keyframes ellipsis {
     0%   { content: '.';   }
     33%  { content: '..';  }
@@ -660,6 +679,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     transition: color 0.2s, border-color 0.2s;
   }
   .theme-toggle:hover { color: var(--text); border-color: var(--accent); }
+
+  .char-counter {
+    text-align: right;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 4px;
+    transition: color 0.2s;
+  }
+  .char-counter.warn  { color: var(--yellow); }
+  .char-counter.limit { color: var(--red); }
 
   header {
     display: flex;
@@ -694,16 +723,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="file" name="emlfile" id="file-input" accept=".eml,.msg,.txt,message/rfc822">
         <span class="dz-icon">&#128274;</span>
         <p><strong>Drop an .eml or .msg file here to analyse immediately</strong><br>or click to browse</p>
-        <p class="dz-sub">.eml submits directly &nbsp;|&nbsp; .msg headers are extracted first, then submitted</p>
+        <p class="dz-sub">.eml body is stripped automatically &nbsp;|&nbsp; .msg headers are extracted first, then submitted</p>
       </div>
       <div id="file-name"></div>
 
       <div class="divider">or paste / drop headers below</div>
 
       <div class="textarea-wrap" id="textarea-wrap">
-        <textarea name="headers" id="headers-input"
+        <textarea name="headers" id="headers-input" maxlength="30000"
           placeholder="Received: from mail-wr1-f99.google.com ...&#10;X-Forefront-Antispam-Report: CIP:209.85.222.99; ...&#10;&#10;Paste raw email headers here, or drop a file above."
         ><?= htmlspecialchars($_POST['headers'] ?? '') ?></textarea>
+        <div class="char-counter" id="char-counter"><span id="char-count">0</span>&nbsp;/&nbsp;30,000</div>
         <div class="textarea-drop-hint">&#8595; Drop .eml or .msg to extract headers</div>
       </div>
 
@@ -748,6 +778,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       })();
     </script>
   <?php endif; ?>
+
+  <div class="resources-bar">
+    Related tools:
+    <a href="https://mxtoolbox.com/" target="_blank" rel="noopener">MXToolbox</a>
+    <span class="resources-sep">|</span>
+    <a href="https://mha.azurewebsites.net/" target="_blank" rel="noopener">Microsoft Message Header Analyser</a>
+  </div>
 
   <footer>
     <p>
@@ -835,13 +872,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
 
   // Dropzone DROP:
-  //   .eml → auto-submit the file directly (fast path)
+  //   .eml / .txt → read in browser, strip to header block, auto-submit as text
   //   .msg → extract headers server-side, populate textarea, auto-submit
+  const MAX_DROP_BYTES = 20 * 1024 * 1024; // 20 MB hard reject (avoid OOM)
   dropzone.addEventListener('drop', async e => {
     e.preventDefault();
     dropzone.classList.remove('dragover');
     const file = e.dataTransfer.files[0];
     if (!file) return;
+
+    if (file.size > MAX_DROP_BYTES) {
+      fileName.textContent = '\u26a0 ' + file.name + ' \u2014 file too large (max 20 MB)';
+      return;
+    }
 
     if (file.name.toLowerCase().endsWith('.msg')) {
       fileName.textContent = file.name + ' \u2014 extracting headers\u2026';
@@ -863,20 +906,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       return;
     }
 
-    // .eml / plain text — set on file input and auto-submit
+    // .eml / plain text — strip to header block in browser, submit as text
     try {
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      fileInput.files = dt.files;
-    } catch (_) {}
-    ta.value = '';
-    fileName.textContent = file.name + ' \u2014 ';
-    const span1 = document.createElement('span');
-    span1.className = 'anim-ellipsis'; span1.textContent = 'submitting';
-    fileName.appendChild(span1);
-    submitBtn.innerHTML = 'Analysing<span class="anim-ellipsis"></span>';
-    submitBtn.disabled  = true;
-    form.submit();
+      const text        = await readFileAsText(file);
+      const hdrs        = extractHeaders(text);
+      ta.value          = hdrs;
+      fileInput.value   = '';
+      fileName.textContent = file.name + ' \u2014 ';
+      updateCharCounter();
+      const span1 = document.createElement('span');
+      span1.className = 'anim-ellipsis'; span1.textContent = 'submitting';
+      fileName.appendChild(span1);
+      submitBtn.innerHTML = 'Analysing<span class="anim-ellipsis"></span>';
+      submitBtn.disabled  = true;
+      form.submit();
+    } catch (err) {
+      fileName.textContent = '\u26a0 ' + file.name + ' \u2014 ' + err.message;
+    }
   });
 
   // File picker change: show name, clear textarea, but don't auto-submit
@@ -941,10 +987,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ta.focus();
       fileInput.value      = '';
       fileName.textContent = file.name + ' \u2014 headers extracted';
+      updateCharCounter();
     } catch (err) {
       ta.placeholder = 'Failed to read file: ' + err.message;
     }
   }, true);
+
+  // ------------------------------------------------------------------
+  // Character counter for paste textarea
+  // ------------------------------------------------------------------
+  const charCount   = document.getElementById('char-count');
+  const charCounter = document.getElementById('char-counter');
+  const MAX_PASTE   = 30000;
+
+  function updateCharCounter() {
+    if (!charCount || !ta) return;
+    const len = ta.value.length;
+    charCount.textContent = len.toLocaleString();
+    charCounter.classList.toggle('warn',  len > MAX_PASTE * 0.8 && len <= MAX_PASTE);
+    charCounter.classList.toggle('limit', len > MAX_PASTE);
+  }
+
+  if (ta) {
+    ta.addEventListener('input', updateCharCounter);
+    updateCharCounter(); // initialise on page load (handles repopulated POST value)
+  }
 
   // ------------------------------------------------------------------
   // Loading state on manual submit
