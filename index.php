@@ -11,13 +11,13 @@ define('RATE_LIMIT',      10);          // max requests per window
 define('RATE_WINDOW',     60);          // seconds
 
 // Resolve the Python binary once per request.
-// Checks common absolute paths first (web server PATH is often restricted),
-// then falls back to `which` and finally bare name as last resort.
+// Tests each candidate by actually executing it - avoids open_basedir restrictions
+// that prevent file_exists() checks on paths outside the web root.
 function find_python_bin(): string {
     static $resolved = null;
     if ($resolved !== null) return $resolved;
 
-    // Common absolute paths, preferred order
+    // Try absolute paths first, then bare names; test by running --version
     $candidates = [
         '/bin/python3',
         '/usr/bin/python3',
@@ -25,19 +25,13 @@ function find_python_bin(): string {
         '/bin/python',
         '/usr/bin/python',
         '/usr/local/bin/python',
+        'python3',
+        'python',
     ];
-    foreach ($candidates as $path) {
-        if (file_exists($path) && is_executable($path)) {
-            $resolved = $path;
-            return $resolved;
-        }
-    }
-
-    // Try `which` as a fallback (external binary, more reliable than `command -v` under sh)
-    foreach (['python3', 'python'] as $name) {
-        $path = trim((string)shell_exec('which ' . escapeshellarg($name) . ' 2>/dev/null'));
-        if ($path !== '' && file_exists($path)) {
-            $resolved = $path;
+    foreach ($candidates as $candidate) {
+        $out = @shell_exec(escapeshellarg($candidate) . ' --version 2>&1');
+        if ($out !== null && strpos($out, 'Python') !== false) {
+            $resolved = $candidate;
             return $resolved;
         }
     }
@@ -260,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             file_put_contents($tmp, $raw_headers);
 
             $resolve_flag = !empty($_POST['resolve']) ? '-r' : '-R';
-            $cmd = 'env DECODE_SPAM_HEADERS_WEB=1'
+            $cmd = 'DECODE_SPAM_HEADERS_WEB=1'
                  . ' ' . find_python_bin()
                  . ' ' . escapeshellarg(SCRIPT_PATH)
                  . ' -f html'
