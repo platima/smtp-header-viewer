@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $script_errors[] = 'No headers provided. Paste headers into the text box or upload an .eml / .msg file.';
         } elseif (empty($script_errors) && isset($_POST['headers']) && strlen($raw_headers) > MAX_PASTE_CHARS) {
             $script_errors[] = 'Pasted headers exceed the ' . number_format(MAX_PASTE_CHARS) . '-character limit. '
-                . 'If you have a full .eml file, upload or drop it — the body is stripped automatically.';
+                . 'If you have a full .eml file, upload or drop it - the body is stripped automatically.';
         } elseif (empty($script_errors) && strlen($raw_headers) > MAX_INPUT_BYTES) {
             $script_errors[] = 'Input exceeds the 512 KB limit.';
         } elseif (empty($script_errors)) {
@@ -225,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             file_put_contents($tmp, $raw_headers);
 
             $resolve_flag = !empty($_POST['resolve']) ? '-r' : '-R';
-            $env = 'DECODE_SPAM_HEADERS_WEB=1';
+            $env = 'env DECODE_SPAM_HEADERS_WEB=1';
             $cmd = $env . ' '
                  . PYTHON_BIN
                  . ' ' . escapeshellarg(SCRIPT_PATH)
@@ -248,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (preg_match('/^\s*\[!\]/', $line)) {
                         if (preg_match('/pip3 install (\S+)/', $line, $m)) {
                             $pkg = htmlspecialchars($m[1]);
-                            $script_errors[] = 'Missing Python dependency: <code>' . $pkg . '</code> &mdash; '
+                            $script_errors[] = 'Missing Python dependency: <code>' . $pkg . '</code> - '
                                 . 'install it on the server: <code>pip3 install ' . $pkg . ' --break-system-packages</code>';
                         } else {
                             $script_errors[] = htmlspecialchars(trim($line));
@@ -263,10 +263,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (strpos($candidate, '<html') !== false || strpos($candidate, '<body') !== false) {
                     $result_html = $candidate;
                 } elseif (empty($script_errors)) {
+                    $preview = htmlspecialchars(mb_substr(trim($raw_output), 0, 2048));
                     $script_errors[] = 'Script returned no recognisable output. '
-                        . 'Make sure you are uploading a plain-text .eml file &mdash; .msg binary files should be dropped onto the <strong>textarea</strong> below the dropzone to extract headers first.';
+                        . 'Verify that <code>' . htmlspecialchars(PYTHON_BIN) . '</code> is in PATH for the web server user '
+                        . 'and that all dependencies are installed.';
+                    $script_errors[] = '<strong>Script output:</strong><pre style="white-space:pre-wrap;word-break:break-all;margin-top:6px;font-size:0.75rem;">'
+                        . $preview . (strlen(trim($raw_output)) > 2048 ? '\n[... truncated]' : '') . '</pre>';
                     if (DEBUG_MODE) {
-                        $script_errors[] = '<strong>Debug output:</strong><pre style="white-space:pre-wrap;word-break:break-all;margin-top:8px;">'
+                        $script_errors[] = '<strong>Full debug output:</strong><pre style="white-space:pre-wrap;word-break:break-all;margin-top:8px;">'
                             . htmlspecialchars($raw_output) . '</pre>';
                     }
                 }
@@ -703,7 +707,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <header>
     <div>
       <h1><a href="<?= htmlspecialchars(strtok($_SERVER['REQUEST_URI'], '?')) ?>" style="text-decoration:none;color:inherit;">SMTP Header <span>Analyser</span></a></h1>
-      <p class="tagline">Powered by decode-spam-headers.py &mdash; @mariuszbit</p>
     </div>
     <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">&#9788; Light</button>
   </header>
@@ -742,7 +745,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <input type="checkbox" name="resolve" value="1" <?= !empty($_POST['resolve']) ? 'checked' : '' ?>>
           DNS resolution
         </label>
-        <span class="hint">(resolves IPs &amp; domains &mdash; slower)</span>
+        <span class="hint">(resolves IPs &amp; domains - slower)</span>
       </div>
     </div>
 
@@ -788,7 +791,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <footer>
     <p>
-      v<?= APP_VERSION ?> &mdash;
+      v<?= APP_VERSION ?> -
       Analysis engine: <a href="https://github.com/mgeeky/decode-spam-headers" target="_blank" rel="noopener">decode-spam-headers.py</a> by <a href="https://twitter.com/mariuszbit" target="_blank" rel="noopener">@mariuszbit</a>
     </p>
     <p style="margin-top: 6px;">
@@ -799,7 +802,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </footer>
 </div>
 
-<!-- (no client-side .msg parser — the library has Node.js dependencies that don't work in browsers) -->
+<!-- (no client-side .msg parser - the library has Node.js dependencies that don't work in browsers) -->
 
 <script>
 (function () {
@@ -906,7 +909,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       return;
     }
 
-    // .eml / plain text — strip to header block in browser, submit as text
+    // .eml / plain text - strip to header block in browser, submit as text
     try {
       const text        = await readFileAsText(file);
       const hdrs        = extractHeaders(text);
@@ -935,7 +938,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // ------------------------------------------------------------------
   // Textarea drop zone: extract headers and show for review.
-  // Neither .eml nor .msg auto-submits — user clicks Analyse when ready.
+  // Neither .eml nor .msg auto-submits - user clicks Analyse when ready.
   // Capture-phase listeners fire before the native textarea handler.
   // ------------------------------------------------------------------
   taWrap.addEventListener('dragover', e => {
@@ -969,6 +972,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ta.placeholder       = '';
         fileName.textContent = file.name + ' \u2014 headers extracted';
         fileInput.value      = '';
+        updateCharCounter();
         ta.focus();
       } catch (err) {
         ta.value       = '';
@@ -978,7 +982,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       return;
     }
 
-    // .eml / plain text — extract headers into the textarea, do NOT submit
+    // .eml / plain text - extract headers into the textarea, do NOT submit
     try {
       const text    = await readFileAsText(file);
       const headers = extractHeaders(text);
