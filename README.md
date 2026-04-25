@@ -10,6 +10,7 @@ Privacy is maintained by no submitted data being stored on the servers, and the 
 
 This is a fork of [mgeeky/decode-spam-headers](https://github.com/mgeeky/decode-spam-headers) wrapped in a PHP web frontend with security hardening, a Solarised colour theme, dark/light mode support, and upstream-compatible Python changes.
 
+The hosting for this is at my own cost, so if you find this tool useful, please consider [sponsoring the project](https://github.com/sponsors/platima) or [becoming a Patron](https://patreon.com/Platima). Thank you kindly in advance 🙏
 
 ## Web Usage
 
