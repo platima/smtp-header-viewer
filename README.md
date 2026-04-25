@@ -2,9 +2,11 @@
 
 # SMTP Header Analyser
 
-A web-based SMTP header analysis tool hosted at **[smtpheaders.com](https://smtpheaders.com)**.
+**<p align="center">A web-based SMTP header analysis tool hosted at [smtpheaders.com](https://smtpheaders.com).</p>**
 
-Paste raw email headers or upload `.eml` / `.msg` files and get a detailed breakdown of anti-spam verdicts, mail server hops, SPF/DKIM results, domain impersonation checks, and more. Powered by **105+ tests** across **85+ header types**.
+Paste raw email headers or drop / upload `.eml` or `.msg` files (max 50MB) and get a detailed breakdown of anti-spam verdicts, mail server hops, SPF/DKIM results, domain impersonation checks, and more. Powered by **105+ tests** across **85+ header types**.
+
+Privacy is maintained by no submitted data being stored on the servers, and the email body being automatically stripped before submission.
 
 This is a fork of [mgeeky/decode-spam-headers](https://github.com/mgeeky/decode-spam-headers) wrapped in a PHP web frontend with security hardening, a Solarised colour theme, dark/light mode support, and upstream-compatible Python changes.
 
